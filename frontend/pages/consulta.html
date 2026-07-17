@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Portal de Consultas de Lunas Oscurecidas</title>
+
+<script src="https://www.google.com/recaptcha/api.js" async defer></script>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+
+background:#ffffff url("/assets/fondos/fondo.png") repeat;
+background-size:1950px;
+color:#222;
+
+}
+
+header{
+
+background:#0b553b;
+border-bottom:4px solid #d2b26c;
+padding:10px 35px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+
+}
+
+.logo{
+
+width:95px;
+height:95px;
+object-fit:contain;
+
+}
+
+.centro{
+
+flex:1;
+text-align:center;
+padding:0 20px;
+
+}
+
+.centro h1{
+
+color:#d8b26d;
+font-size:25px;
+font-weight:bold;
+line-height:38px;
+
+}
+
+.contenedor{
+
+width:96%;
+max-width:1120px;
+margin:26px auto;
+
+}
+
+.panel{
+
+background:#fff;
+border:1px solid #68c8ea;
+border-radius:4px;
+overflow:hidden;
+box-shadow:0 3px 10px rgba(0,0,0,.12);
+
+}
+
+.panelTitulo{
+
+background:#f3f3f3;
+padding:18px;
+font-size:22px;
+font-weight:bold;
+
+}
+
+.panelBody{
+
+padding:20px;
+
+}
+
+.fila{
+
+display:flex;
+align-items:center;
+margin-bottom:18px;
+
+}
+
+label{
+
+width:190px;
+font-size:16px;
+
+}
+
+select{
+
+width:420px;
+height:42px;
+padding:8px;
+border:1px solid #cfcfcf;
+border-radius:4px;
+font-size:15px;
+
+}
+
+input{
+
+width:420px;
+height:42px;
+padding:10px;
+border:1px solid #cfcfcf;
+border-radius:4px;
+font-size:15px;
+
+}
+
+button{
+
+background:#0b553b;
+color:white;
+border:none;
+padding:12px 28px;
+border-radius:4px;
+font-size:15px;
+font-weight:bold;
+cursor:pointer;
+margin-left:15px;
+
+}
+
+button:hover{
+
+background:#157349;
+
+}
+
+#resultado{
+
+display:none;
+margin-top:30px;
+
+}
+
+table{
+
+width:100%;
+border-collapse:collapse;
+background:white;
+
+}
+
+th{
+
+background:#efefef;
+padding:12px;
+border:1px solid #d8d8d8;
+text-align:left;
+font-size:14px;
+
+}
+
+td{
+
+padding:12px;
+border:1px solid #d8d8d8;
+font-size:14px;
+
+}
+
+#btnPDF{
+
+margin-top:20px;
+
+}
+
+#video{
+
+width:200px;
+max-width:100%;
+height:auto;
+display:block;
+margin:25px auto;
+border-radius:8px;
+
+}
+
+footer{
+
+margin-top:40px;
+background:#0b553b;
+color:white;
+text-align:center;
+padding:18px;
+
+}
+
+footer p:first-child{
+
+font-size:17px;
+font-weight:bold;
+margin-bottom:10px;
+
+}
+
+footer p:last-child{
+
+font-size:15px;
+
+}
+
+@media(max-width:768px){
+
+header{
+
+flex-direction:column;
+padding:15px;
+
+}
+
+.logo{
+
+width:75px;
+height:75px;
+
+}
+
+.centro h1{
+
+font-size:18px;
+line-height:30px;
+
+}
+
+.fila{
+
+flex-direction:column;
+align-items:flex-start;
+
+}
+
+label{
+
+width:100%;
+margin-bottom:8px;
+
+}
+
+select,
+input,
+button{
+
+width:100%;
+margin-left:0;
+
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<img src="/assets/logos/pnp.png" class="logo">
+
+<div class="centro">
+
+<h1>
+
+PORTAL DE CONSULTAS AL CIUDADANO PARA VEHÍCULOS CON PERMISO DE LUNAS OSCURECIDAS
+
+</h1>
+
+</div>
+
+<img src="/assets/logos/lunas.png" class="logo">
+
+</header>
+
+<div class="contenedor">
+
+<div class="panel">
+
+<div class="panelTitulo">
+
+1. Consultar Permiso
+
+</div>
+
+<div class="panelBody">
+    <div class="fila">
+
+<label>Tipo de Búsqueda:</label>
+
+<select id="tipoBusqueda">
+
+<option value="placa">Placa</option>
+
+<option value="certificado">Certificado</option>
+
+</select>
+
+</div>
+
+<div class="fila">
+
+<label id="lblBusqueda">
+
+Ingrese Nro de Placa
+
+</label>
+
+<input
+type="text"
+id="placa"
+placeholder="Ingrese Nro de Placa">
+
+<div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap;">
+
+<div
+    class="g-recaptcha"
+    data-sitekey="6LdWIFctAAAAAP1PfWRPySgQCosmC6Ws58GiO9F_">
+</div>
+
+<button onclick="consultar()">
+
+CONSULTAR
+
+</button>
+
+</div>
+
+</div>
+
+<video
+id="video"
+controls
+autoplay
+muted
+loop
+playsinline>
+
+<source
+src="/assets/video/pnp.mp4"
+type="video/mp4">
+
+Tu navegador no soporta video.
+
+</video>
+
+<div id="resultado">
+
+<table id="tablaResultado">
+
+<thead>
+
+<tr>
+
+<th>PLACA</th>
+
+<th>NRO CERTIFICADO</th>
+
+<th>CATEGORÍA</th>
+
+<th>MARCA</th>
+
+<th>MODELO</th>
+
+<th>COLOR</th>
+
+<th>MOTOR</th>
+
+<th>SERIE</th>
+
+<th>AÑO</th>
+
+<th>FECHA EMISIÓN</th>
+
+</tr>
+
+</thead>
+
+<tbody>
+
+<tr>
+
+<td id="rPlaca"></td>
+
+<td id="rCertificado"></td>
+
+<td id="rCategoria"></td>
+
+<td id="rMarca"></td>
+
+<td id="rModelo"></td>
+
+<td id="rColor"></td>
+
+<td id="rMotor"></td>
+
+<td id="rSerie"></td>
+
+<td id="rAnio"></td>
+
+<td id="rFecha"></td>
+
+</tr>
+
+</tbody>
+
+</table>
+
+<div style="margin-top:20px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:15px;">
+
+<div>
+
+<strong>PROPIETARIO:</strong>
+
+<span id="rPropietario"></span>
+
+</div>
+
+<button id="btnPDF">
+
+VER CERTIFICADO PDF
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<footer>
+
+<p>
+
+📢 La Policía Nacional del Perú pone al servicio de la ciudadanía el Portal de Consultas de Vehículos con Permiso de Lunas Oscurecidas.
+
+</p>
+
+<p>
+
+© 2025 - Todos los derechos reservados.
+
+</p>
+
+</footer>
+
+<script>
+
+const tipoBusqueda=document.getElementById("tipoBusqueda");
+
+const etiqueta=document.getElementById("lblBusqueda");
+
+const caja=document.getElementById("placa");
+
+tipoBusqueda.addEventListener("change",function(){
+
+if(this.value==="placa"){
+
+etiqueta.textContent="Ingrese Nro de Placa";
+
+caja.placeholder="Ingrese Nro de Placa";
+
+}else{
+
+etiqueta.textContent="Ingrese Nro de Certificado";
+
+caja.placeholder="Ingrese Nro de Certificado";
+
+}
+
+});
+
+async function consultar(){
+
+
+const tipo=tipoBusqueda.value;
+
+const valor=caja.value.trim().toUpperCase();
+
+const token = grecaptcha.getResponse();
+
+if(token===""){
+    alert("Marque la casilla 'No soy un robot'.");
+    return;
+}
+
+
+if(valor===""){
+
+alert("Ingrese un valor.");
+
+return;
+
+}
+
+try{
+const respuesta = await fetch(
+
+"http://localhost:3000/importar/consulta/" + tipo + "/" + valor
+
+);
+
+const datos = await respuesta.json();
+
+if(!datos.ok){
+
+alert(datos.mensaje);
+
+document.getElementById("resultado").style.display="none";
+
+return;
+
+}
+
+const registro = datos.registro;
+
+document.getElementById("resultado").style.display="block";
+
+document.getElementById("rPlaca").textContent = registro.placa || "";
+
+document.getElementById("rCertificado").textContent = registro.nro_certificado || "";
+
+document.getElementById("rCategoria").textContent = registro.categoria || "";
+
+document.getElementById("rMarca").textContent =
+    (registro.marca || "").replace(/\s+[A-Z]$/, "");
+
+document.getElementById("rModelo").textContent = registro.modelo || "";
+
+document.getElementById("rColor").textContent = registro.color || "";
+
+document.getElementById("rMotor").textContent =
+    (registro.motor || "").replace(/\s+Modelo$/i, "");
+console.log("SERIE:", registro.serie);
+document.getElementById("rSerie").textContent =
+    (registro.serie || "")
+        .replace(/\s*Color\s*/gi, "")
+        .trim();
+
+document.getElementById("rAnio").textContent = registro.anio || "";
+
+if (registro.fecha_emision) {
+    const fecha = new Date(registro.fecha_emision);
+
+    const dia = String(fecha.getDate()).padStart(2, "0");
+    const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+    const anio = fecha.getFullYear();
+
+    document.getElementById("rFecha").textContent = `${dia}/${mes}/${anio}`;
+} else {
+    document.getElementById("rFecha").textContent = "";
+}
+
+document.getElementById("rPropietario").textContent = registro.propietario || "";
+
+document.getElementById("btnPDF").onclick=function(){
+
+if(!registro.archivo_pdf){
+
+alert("Este registro no tiene PDF.");
+
+return;
+
+}
+
+window.open(
+
+"http://localhost:3000/uploads/"+registro.archivo_pdf,
+
+"_blank"
+
+);
+
+};
+
+const video = document.getElementById("video");
+
+if(registro.video){
+
+video.src = registro.video;
+
+video.load();
+
+video.play();
+
+}else{
+
+video.src = "/assets/video/pnp.mp4";
+
+video.load();
+
+video.play();
+
+}
+
+}catch(error){
+
+console.error(error);
+
+alert("Error al consultar.");
+
+}
+
+}
+
+</script>
+
+</body>
+
+</html>
