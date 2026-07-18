@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
@@ -10,11 +12,12 @@ const usuariosRoutes = require("./routes/usuariosRoutes");
 const importRoutes = require("./routes/importRoutes");
 const authRoutes = require("./routes/authRoutes");
 const verificarToken = require("./middleware/authMiddleware");
+
 const app = express();
 
-require("dotenv").config();
-
 const PORT = process.env.PORT || 3000;
+
+// Seguridad
 app.use(
     helmet({
         contentSecurityPolicy: false
@@ -31,6 +34,7 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
+
 // Middlewares
 app.use(cors());
 app.use(express.json());
@@ -41,61 +45,45 @@ app.use("/assets", express.static(path.join(__dirname, "../frontend/assets")));
 app.use("/styles", express.static(path.join(__dirname, "../frontend/styles")));
 app.use("/services", express.static(path.join(__dirname, "../frontend/services")));
 app.use("/public", express.static(path.join(__dirname, "../frontend/public")));
-
-// Conexión a MySQL
-conexion.connect((err) => {
-
-    if (err) {
-        console.error("❌ Error al conectar a MySQL:", err);
-        return;
-    }
-
-    console.log("✅ Base de datos conectada correctamente");
-
+app.get("/robots.txt", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/public/robots.txt"));
 });
 
+app.get("/sitemap.xml", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/public/sitemap.xml"));
+});
 // Ruta principal
 app.get("/", (req, res) => {
-
     res.redirect("/public/index.html");
-
 });
 
 // Panel de administración
 app.get("/panel", (req, res) => {
-
     res.sendFile(
         path.join(__dirname, "../frontend/pages/panel.html")
     );
-
 });
 
 // Módulo Lunas
 app.get("/lunas", (req, res) => {
-
     res.sendFile(
         path.join(__dirname, "../frontend/pages/lunas.html")
     );
-
 });
 
 // Consulta pública
 app.get("/consulta", (req, res) => {
-
     res.sendFile(
         path.join(__dirname, "../frontend/pages/consulta.html")
     );
-
 });
 
-// Rutas API
+// Rutas
 app.use("/usuarios", usuariosRoutes);
 app.use("/importar", importRoutes);
 app.use("/", authRoutes);
 
-
+// Iniciar servidor
 app.listen(PORT, () => {
-
-    console.log(`Servidor iniciado en http://localhost:${PORT}`);
-
+    console.log(`🚀 Servidor iniciado en http://localhost:${PORT}`);
 });
