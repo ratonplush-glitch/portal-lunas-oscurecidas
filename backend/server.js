@@ -14,7 +14,7 @@ const authRoutes = require("./routes/authRoutes");
 const verificarToken = require("./middleware/authMiddleware");
 
 const app = express();
-
+app.set("trust proxy", 1);
 const PORT = process.env.PORT || 3000;
 
 // Seguridad
