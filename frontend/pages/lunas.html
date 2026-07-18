@@ -379,11 +379,11 @@ async function eliminarRegistro(id){
     try{
 
         const respuesta = await fetch(
-            "http://localhost:3000/importar/lunas/" + id,
-            {
-                method:"DELETE"
-            }
-        );
+    "/importar/lunas/" + id,
+    {
+        method:"DELETE"
+    }
+);
 
         const datos = await respuesta.json();
 

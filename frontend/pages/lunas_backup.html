@@ -207,7 +207,7 @@ Buscar
 
     try{
 
-        const respuesta = await fetch("http://localhost:3000/importar/lunas");
+        const respuesta = await fetch("https://portal-lunas-oscurecidas.onrender.com/importar/lunas");
 
         const datos = await respuesta.json();
 
@@ -309,9 +309,9 @@ function verPDF(pdf){
     }
 
     window.open(
-        "http://localhost:3000/uploads/"+pdf,
-        "_blank"
-    );
+    "https://portal-lunas-oscurecidas.onrender.com/uploads/"+pdf,
+    "_blank"
+);
 
 }
 async function editarRegistro(id){
@@ -325,7 +325,7 @@ async function editarRegistro(id){
     try{
 
         const respuesta = await fetch(
-            "http://localhost:3000/importar/lunas/" + id,
+            "https://portal-lunas-oscurecidas.onrender.com/importar/lunas/" + id,
             {
                 method: "PUT",
                 headers:{
@@ -373,7 +373,7 @@ async function eliminarRegistro(id){
     try{
 
         const respuesta = await fetch(
-            "http://localhost:3000/importar/lunas/" + id,
+            "https://portal-lunas-oscurecidas.onrender.com/importar/lunas/" + id,
             {
                 method:"DELETE"
             }
