@@ -1,4 +1,4 @@
-const API = "https://portal-lunas-oscurecidas.onrender.com/login";
+const API = "/login";
 
 const btn = document.getElementById("btnLogin");
 const mensaje = document.getElementById("mensaje");
