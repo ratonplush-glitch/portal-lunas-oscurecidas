@@ -33,7 +33,7 @@ const limiter = rateLimit({
     }
 });
 
-app.use(limiter);
+// app.use(limiter);
 
 // Middlewares
 app.use(cors());

@@ -4,7 +4,7 @@ const fs = require("fs");
 const path = require("path");
 
 const conexion = require("../config/db");
-
+const cloudinary = require("../config/cloudinary");
 const importarExcel = async (req, res) => {
 
     try {
@@ -124,7 +124,15 @@ const importarPDF = async (req, res) => {
             /Año:\s*([0-9]{4})/i
         );
 
-        const archivo_pdf = path.basename(rutaPDF);
+        const subida = await cloudinary.uploader.upload(rutaPDF, {
+    resource_type: "raw",
+    folder: "portal-lunas-pdf"
+});
+
+const archivo_pdf = subida.secure_url;
+
+// eliminamos el archivo temporal
+fs.unlinkSync(rutaPDF);
 
         const video = "";
         const sql = `

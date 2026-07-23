@@ -592,21 +592,16 @@ document.getElementById("rPropietario").textContent = registro.propietario || ""
 
 document.getElementById("btnPDF").onclick=function(){
 
-if(!registro.archivo_pdf){
+document.getElementById("btnPDF").onclick = function () {
 
-alert("Este registro no tiene PDF.");
+    if (!registro.archivo_pdf) {
 
-return;
+        alert("Este registro no tiene PDF.");
+        return;
 
-}
+    }
 
-window.open(
-
-"https://portal-lunas-oscurecidas.onrender.com/uploads/"+registro.archivo_pdf,
-
-"_blank"
-
-);
+    window.open(registro.archivo_pdf, "_blank");
 
 };
 
