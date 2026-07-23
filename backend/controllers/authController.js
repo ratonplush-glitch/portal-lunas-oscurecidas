@@ -24,14 +24,17 @@ const login = (req, res) => {
 
     conexion.query(sql, [usuario], async (err, resultado) => {
 
-        if (err) {
+if (err) {
 
-            return res.status(500).json({
-                ok: false,
-                mensaje: "Error de base de datos"
-            });
+    console.error("ERROR LOGIN:", err);
 
-        }
+    return res.status(500).json({
+        ok: false,
+        mensaje: "Error de base de datos",
+        error: err.message
+    });
+
+}
 
         if (resultado.length === 0) {
 
