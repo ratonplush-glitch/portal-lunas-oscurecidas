@@ -16,7 +16,7 @@ app.set('trust proxy', 1);
 app.use(cors());
 app.use(express.json({ limit: '2mb' }));
 
-const PUBLIC = path.join(__dirname, 'public');
+const PUBLIC = __dirname;
 
 // Vercel serves public/ automatically. These routes keep the original clean URLs.
 app.get('/', (req, res) => res.redirect('/consulta'));
