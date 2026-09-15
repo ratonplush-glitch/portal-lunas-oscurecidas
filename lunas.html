@@ -246,15 +246,11 @@ async function cargarLunas(){
 
     try{
 
-        const token = localStorage.getItem("token");
-
-const respuesta = await fetch("/api/importar/lunas", {
-    headers: {
-        "Authorization": `Bearer ${token}`
-    }
+        const respuesta = await fetch("/api/importar/lunas", {
+    method: "GET",
+    headers: obtenerHeaders(),
+    cache: "no-store"
 });
-
-const datos = await respuesta.json();
 
 
         if(respuesta.status===401 || respuesta.status===403){
