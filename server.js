@@ -1209,10 +1209,17 @@ app.post(
        * EXTRAER DATOS
        */
 
-      const registro =
-        await parsePdf(
-          req.file.buffer
-        );
+      const registro = await parsePdf(req.file.buffer);
+
+// La fecha seleccionada desde el panel tiene prioridad
+if (req.body.fecha_emision) {
+    const partes = req.body.fecha_emision.split('-');
+
+    if (partes.length === 3) {
+        registro.fecha_emision =
+            `${partes[2]}/${partes[1]}/${partes[0]}`;
+    }
+}
 
       /*
        * La placa es obligatoria.
