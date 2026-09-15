@@ -3,146 +3,159 @@
 <head>
 
 <meta charset="UTF-8">
+
 <meta name="robots" content="noindex,nofollow">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+>
 
 <title>Panel de Administración</title>
 
 <style>
 
 *{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:Arial,Helvetica,sans-serif;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,Helvetica,sans-serif;
 }
 
 body{
-background:#0f172a;
-color:white;
+    background:#0f172a;
+    color:white;
 }
 
 header{
-background:#1e293b;
-padding:20px 40px;
-display:flex;
-justify-content:space-between;
-align-items:center;
+    background:#1e293b;
+    padding:20px 40px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
 }
 
 header h1{
-font-size:30px;
+    font-size:30px;
 }
 
 .cerrar{
-background:#dc2626;
-border:none;
-padding:12px 22px;
-color:white;
-font-weight:bold;
-border-radius:8px;
-cursor:pointer;
+    background:#dc2626;
+    border:none;
+    padding:12px 22px;
+    color:white;
+    font-weight:bold;
+    border-radius:8px;
+    cursor:pointer;
 }
 
 .contenedor{
-width:95%;
-margin:25px auto;
+    width:95%;
+    margin:25px auto;
 }
 
 h2{
-margin-bottom:15px;
+    margin-bottom:15px;
 }
 
 form{
-background:#1e293b;
-padding:20px;
-border-radius:10px;
-margin-bottom:25px;
+    background:#1e293b;
+    padding:20px;
+    border-radius:10px;
+    margin-bottom:25px;
 }
 
 input[type=file]{
-margin-bottom:15px;
+    margin-bottom:15px;
 }
 
 button{
-padding:12px 22px;
-background:#2563eb;
-border:none;
-color:white;
-border-radius:6px;
-cursor:pointer;
-font-weight:bold;
+    padding:12px 22px;
+    background:#2563eb;
+    border:none;
+    color:white;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:bold;
 }
 
 button:hover{
-background:#1d4ed8;
+    background:#1d4ed8;
 }
 
 #resultado{
-margin-top:20px;
-margin-bottom:30px;
-padding:15px;
-background:#1e293b;
-border-radius:10px;
+    margin-top:20px;
+    margin-bottom:30px;
+    padding:15px;
+    background:#1e293b;
+    border-radius:10px;
+    white-space:pre-wrap;
+    word-break:break-word;
 }
 
 .tarjetas{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-gap:20px;
+    display:grid;
+    grid-template-columns:repeat(
+        auto-fit,
+        minmax(240px,1fr)
+    );
+    gap:20px;
 }
 
 .card{
-background:#1e293b;
-padding:35px;
-border-radius:12px;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-cursor:pointer;
-transition:.3s;
+    background:#1e293b;
+    padding:35px;
+    border-radius:12px;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:.3s;
 }
 
 .card:hover{
-background:#2563eb;
-transform:translateY(-5px);
+    background:#2563eb;
+    transform:translateY(-5px);
 }
 
 .panelTabla{
-display:none;
-margin-top:35px;
-background:#1e293b;
-padding:20px;
-border-radius:10px;
+    display:none;
+    margin-top:35px;
+    background:#1e293b;
+    padding:20px;
+    border-radius:10px;
+    overflow-x:auto;
 }
 
 table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
+    width:100%;
+    border-collapse:collapse;
+    margin-top:20px;
 }
 
 table th{
-background:#2563eb;
-padding:12px;
+    background:#2563eb;
+    padding:12px;
+    white-space:nowrap;
 }
 
 table td{
-padding:12px;
-border-bottom:1px solid #444;
+    padding:12px;
+    border-bottom:1px solid #444;
 }
 
 .btnEditar{
-background:#16a34a;
+    background:#16a34a;
+    margin-right:5px;
 }
 
 .btnEliminar{
-background:#dc2626;
+    background:#dc2626;
 }
 
 .btnNuevo{
-background:#2563eb;
-margin-bottom:15px;
+    background:#2563eb;
+    margin-bottom:15px;
 }
 
 </style>
@@ -155,11 +168,16 @@ margin-bottom:15px;
 
 <h1>PORTAL DE LUNAS OSCURECIDAS</h1>
 
-<button class="cerrar" onclick="salir()">
-Cerrar sesión
+<button
+    class="cerrar"
+    type="button"
+    onclick="salir()"
+>
+    Cerrar sesión
 </button>
 
 </header>
+
 
 <div class="contenedor">
 
@@ -168,56 +186,76 @@ Cerrar sesión
 <form id="formPDF">
 
 <input
-type="file"
-id="archivoPDF"
-accept=".pdf"
-required>
+    type="file"
+    id="archivoPDF"
+    accept=".pdf,application/pdf"
+    required
+>
 
 <br>
 
-<button type="submit">
-IMPORTAR PDF
+<button
+    type="submit"
+>
+    IMPORTAR PDF
 </button>
 
 </form>
 
+
 <div id="resultado"></div>
+
 
 <div class="tarjetas">
 
-<div class="card" onclick="cargarUsuarios()">
-👤 Usuarios
+<div
+    class="card"
+    onclick="cargarUsuarios()"
+>
+    👤 Usuarios
 </div>
 
 <div class="card">
-🔍 Consultas
+    🔍 Consultas
 </div>
 
 <div class="card">
-🚗 Vehículos
+    🚗 Vehículos
 </div>
 
-<div class="card" onclick="location.href='/lunas'">
-🕶 Lunas Oscurecidas
+<div
+    class="card"
+    onclick="location.href='/lunas'"
+>
+    🕶 Lunas Oscurecidas
 </div>
 
 <div class="card">
-📊 Reportes
+    📊 Reportes
 </div>
 
 <div class="card">
-⚙ Configuración
+    ⚙ Configuración
 </div>
 
 </div>
 
-<div class="panelTabla" id="panelUsuarios">
+
+<div
+    class="panelTabla"
+    id="panelUsuarios"
+>
 
 <h2>Usuarios Registrados</h2>
 
-<button class="btnNuevo" onclick="nuevoUsuario()">
-+ Nuevo Usuario
+<button
+    class="btnNuevo"
+    type="button"
+    onclick="nuevoUsuario()"
+>
+    + Nuevo Usuario
 </button>
+
 
 <table>
 
@@ -246,146 +284,402 @@ IMPORTAR PDF
 </div>
 
 </div>
+
+
 <script>
 
-const token = localStorage.getItem("token");
+/*
+|--------------------------------------------------------------------------
+| AUTENTICACIÓN
+|--------------------------------------------------------------------------
+|
+| El login principal utiliza JWT.
+| Primero buscamos el token en localStorage.
+| Como respaldo, revisamos sessionStorage.
+|
+|--------------------------------------------------------------------------
+*/
 
-if (!token) {
-    location.href = "/index.html";
+function obtenerToken(){
+
+    const localToken =
+        localStorage.getItem("token");
+
+    if(localToken){
+        return localToken;
+    }
+
+    const sessionToken =
+        sessionStorage.getItem("token");
+
+    if(sessionToken){
+        return sessionToken;
+    }
+
+    return "";
 }
 
-function authHeaders(extra = {}) {
+
+let token = obtenerToken();
+
+
+/*
+|--------------------------------------------------------------------------
+| VERIFICAR SESIÓN
+|--------------------------------------------------------------------------
+*/
+
+if(!token){
+
+    location.replace("/index.html");
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| HEADERS DE AUTENTICACIÓN
+|--------------------------------------------------------------------------
+*/
+
+function authHeaders(extra = {}){
+
+    const actualToken =
+        obtenerToken();
+
     return {
-        Authorization: "Bearer " + token,
+        Authorization:
+            "Bearer " + actualToken,
+
         ...extra
     };
+
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| CERRAR SESIÓN
+|--------------------------------------------------------------------------
+*/
 
 function salir(){
 
-    sessionStorage.clear();
-
     localStorage.removeItem("token");
 
-    location.href="/index.html";
+    sessionStorage.removeItem("token");
+
+    sessionStorage.removeItem("admin");
+
+    location.replace("/index.html");
 
 }
 
-document.getElementById("formPDF").addEventListener("submit",async(e)=>{
 
-    e.preventDefault();
+/*
+|--------------------------------------------------------------------------
+| MANEJO DE SESIÓN INVÁLIDA
+|--------------------------------------------------------------------------
+*/
 
-    const archivo =
-        document.getElementById("archivoPDF").files[0];
+function sesionInvalida(){
 
-    if(!archivo){
+    localStorage.removeItem("token");
 
-        alert("Seleccione un archivo PDF.");
+    sessionStorage.removeItem("token");
 
-        return;
+    sessionStorage.removeItem("admin");
+
+    location.replace("/index.html");
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| LEER RESPUESTA DEL SERVIDOR
+|--------------------------------------------------------------------------
+*/
+
+async function leerRespuesta(r){
+
+    const texto =
+        await r.text();
+
+    if(!texto){
+
+        return {};
 
     }
 
-    const datos = new FormData();
+    try{
 
-    datos.append("archivo", archivo);
+        return JSON.parse(texto);
+
+    }catch{
+
+        return {
+            ok:false,
+            mensaje: texto
+        };
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| IMPORTAR PDF
+|--------------------------------------------------------------------------
+*/
+
+document
+    .getElementById("formPDF")
+    .addEventListener(
+        "submit",
+        async(e)=>{
+
+            e.preventDefault();
+
+            const archivo =
+                document
+                    .getElementById("archivoPDF")
+                    .files[0];
+
+
+            if(!archivo){
+
+                alert(
+                    "Seleccione un archivo PDF."
+                );
+
+                return;
+
+            }
+
+
+            const datos =
+                new FormData();
+
+            datos.append(
+                "archivo",
+                archivo
+            );
+
+
+            const resultado =
+                document
+                    .getElementById("resultado");
+
+
+            resultado.textContent =
+                "Procesando PDF...";
+
+
+            try{
+
+                const r =
+                    await fetch(
+                        "/api/importar/pdf",
+                        {
+                            method:"POST",
+
+                            headers:
+                                authHeaders(),
+
+                            body:datos
+                        }
+                    );
+
+
+                if(
+                    r.status === 401 ||
+                    r.status === 403
+                ){
+
+                    sesionInvalida();
+
+                    return;
+
+                }
+
+
+                const j =
+                    await leerRespuesta(r);
+
+
+                resultado.textContent =
+                    JSON.stringify(
+                        j,
+                        null,
+                        2
+                    );
+
+
+                if(j.ok){
+
+                    document
+                        .getElementById(
+                            "formPDF"
+                        )
+                        .reset();
+
+                }
+
+            }catch(error){
+
+                resultado.textContent =
+                    "Error de conexión: " +
+                    error.message;
+
+            }
+
+        }
+    );
+
+
+/*
+|--------------------------------------------------------------------------
+| CARGAR USUARIOS
+|--------------------------------------------------------------------------
+*/
+
+async function cargarUsuarios(){
+
+    const panel =
+        document.getElementById(
+            "panelUsuarios"
+        );
+
+    panel.style.display =
+        "block";
+
+
+    const tabla =
+        document.getElementById(
+            "tablaUsuarios"
+        );
+
+    tabla.innerHTML =
+        "<tr><td colspan='7'>Cargando usuarios...</td></tr>";
+
 
     try{
 
-        const r = await fetch("/api/importar/pdf",{
+        const r =
+            await fetch(
+                "/api/usuarios",
+                {
+                    method:"GET",
 
-            method:"POST",
+                    headers:
+                        authHeaders()
+                }
+            );
 
-            headers: authHeaders(),
 
-            body:datos
+        if(
+            r.status === 401 ||
+            r.status === 403
+        ){
 
-        });
-
-        if(r.status === 401 || r.status === 403){
-
-            localStorage.removeItem("token");
-
-            location.href="/index.html";
+            sesionInvalida();
 
             return;
 
         }
 
-        const j = await r.json();
 
-        document.getElementById("resultado").innerHTML =
-            "<pre>"+JSON.stringify(j,null,2)+"</pre>";
+        const datos =
+            await leerRespuesta(r);
 
-        if(j.ok){
 
-            document.getElementById("formPDF").reset();
+        if(!r.ok){
+
+            tabla.innerHTML =
+                "<tr><td colspan='7'>" +
+                (
+                    datos.mensaje ||
+                    "No se pudieron cargar los usuarios."
+                ) +
+                "</td></tr>";
+
+            return;
 
         }
 
-    }catch(error){
 
-        document.getElementById("resultado").innerHTML =
-            "<pre>Error: "+error.message+"</pre>";
+        let html = "";
 
-    }
 
-});
+        (datos.usuarios || [])
+            .forEach(u=>{
 
-async function cargarUsuarios(){
+                const id =
+                    String(
+                        u.id || ""
+                    );
 
-    document.getElementById("panelUsuarios").style.display="block";
 
-    const r=await fetch("/api/usuarios",{
+                const usuario =
+                    String(
+                        u.usuario || ""
+                    );
 
-        headers: authHeaders()
+                const nombre =
+                    String(
+                        u.nombre || ""
+                    );
 
-    });
+                const correo =
+                    String(
+                        u.correo || ""
+                    );
 
-    if(r.status === 401 || r.status === 403){
+                const rol =
+                    String(
+                        u.rol || ""
+                    );
 
-        localStorage.removeItem("token");
+                const estado =
+                    String(
+                        u.estado ?? ""
+                    );
 
-        location.href="/index.html";
 
-        return;
-
-    }
-
-    const datos=await r.json();
-
-    let html="";
-
-    (datos.usuarios || []).forEach(u=>{
-
-        html+=`
+                html += `
 
 <tr>
 
-<td>${u.id}</td>
+<td>${escapeHTML(id)}</td>
 
-<td>${u.usuario}</td>
+<td>${escapeHTML(usuario)}</td>
 
-<td>${u.nombre}</td>
+<td>${escapeHTML(nombre)}</td>
 
-<td>${u.correo??""}</td>
+<td>${escapeHTML(correo)}</td>
 
-<td>${u.rol??""}</td>
+<td>${escapeHTML(rol)}</td>
 
-<td>${u.estado??""}</td>
+<td>${escapeHTML(estado)}</td>
 
 <td>
 
 <button
-class="btnEditar"
-onclick="editarUsuario(${u.id})">
-Editar
+    class="btnEditar"
+    type="button"
+    onclick="editarUsuario('${escapeJS(id)}')"
+>
+    Editar
 </button>
 
 <button
-class="btnEliminar"
-onclick="eliminarUsuario(${u.id})">
-Eliminar
+    class="btnEliminar"
+    type="button"
+    onclick="eliminarUsuario('${escapeJS(id)}')"
+>
+    Eliminar
 </button>
 
 </td>
@@ -394,93 +688,396 @@ Eliminar
 
 `;
 
-    });
+            });
 
-    document.getElementById("tablaUsuarios").innerHTML=html;
+
+        if(!html){
+
+            html =
+                "<tr><td colspan='7'>" +
+                "No hay usuarios registrados." +
+                "</td></tr>";
+
+        }
+
+
+        tabla.innerHTML =
+            html;
+
+
+    }catch(error){
+
+        tabla.innerHTML =
+            "<tr><td colspan='7'>" +
+            "Error de conexión: " +
+            escapeHTML(error.message) +
+            "</td></tr>";
+
+    }
 
 }
+
+
+/*
+|--------------------------------------------------------------------------
+| ESCAPAR HTML
+|--------------------------------------------------------------------------
+*/
+
+function escapeHTML(valor){
+
+    return String(valor)
+        .replace(/&/g,"&amp;")
+        .replace(/</g,"&lt;")
+        .replace(/>/g,"&gt;")
+        .replace(/"/g,"&quot;")
+        .replace(/'/g,"&#039;");
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ESCAPAR JAVASCRIPT
+|--------------------------------------------------------------------------
+*/
+
+function escapeJS(valor){
+
+    return String(valor)
+        .replace(/\\/g,"\\\\")
+        .replace(/'/g,"\\'");
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| NUEVO USUARIO
+|--------------------------------------------------------------------------
+*/
+
+async function nuevoUsuario(){
+
+    const usuario =
+        prompt(
+            "Nuevo usuario:"
+        );
+
+    if(usuario === null){
+
+        return;
+
+    }
+
+
+    if(!usuario.trim()){
+
+        alert(
+            "El usuario es obligatorio."
+        );
+
+        return;
+
+    }
+
+
+    const nombre =
+        prompt(
+            "Nombre:"
+        );
+
+    if(nombre === null){
+
+        return;
+
+    }
+
+
+    const password =
+        prompt(
+            "Contraseña:"
+        );
+
+    if(password === null){
+
+        return;
+
+    }
+
+
+    if(!password){
+
+        alert(
+            "La contraseña es obligatoria."
+        );
+
+        return;
+
+    }
+
+
+    try{
+
+        const r =
+            await fetch(
+                "/api/usuarios",
+                {
+                    method:"POST",
+
+                    headers:
+                        authHeaders({
+                            "Content-Type":
+                                "application/json"
+                        }),
+
+                    body:
+                        JSON.stringify({
+                            usuario:
+                                usuario.trim(),
+
+                            nombre:
+                                nombre.trim(),
+
+                            password
+                        })
+                }
+            );
+
+
+        if(
+            r.status === 401 ||
+            r.status === 403
+        ){
+
+            sesionInvalida();
+
+            return;
+
+        }
+
+
+        const j =
+            await leerRespuesta(r);
+
+
+        alert(
+            j.mensaje ||
+            "Operación terminada."
+        );
+
+
+        if(j.ok){
+
+            cargarUsuarios();
+
+        }
+
+
+    }catch(error){
+
+        alert(
+            "Error de conexión: " +
+            error.message
+        );
+
+    }
+
+}
+
+
+/*
+|--------------------------------------------------------------------------
+| ELIMINAR USUARIO
+|--------------------------------------------------------------------------
+*/
 
 async function eliminarUsuario(id){
 
-    if(!confirm("¿Desea eliminar este usuario?")) return;
-
-    const r=await fetch("/api/usuarios/"+id,{
-
-        method:"DELETE",
-
-        headers: authHeaders()
-
-    });
-
-    if(r.status === 401 || r.status === 403){
-
-        localStorage.removeItem("token");
-
-        location.href="/index.html";
+    if(
+        !confirm(
+            "¿Desea eliminar este usuario?"
+        )
+    ){
 
         return;
 
     }
 
-    const j=await r.json();
 
-    alert(j.mensaje);
+    try{
 
-    cargarUsuarios();
+        const r =
+            await fetch(
+                "/api/usuarios/" +
+                encodeURIComponent(id),
+                {
+                    method:"DELETE",
+
+                    headers:
+                        authHeaders()
+                }
+            );
+
+
+        if(
+            r.status === 401 ||
+            r.status === 403
+        ){
+
+            sesionInvalida();
+
+            return;
+
+        }
+
+
+        const j =
+            await leerRespuesta(r);
+
+
+        alert(
+            j.mensaje ||
+            "Operación terminada."
+        );
+
+
+        if(j.ok){
+
+            cargarUsuarios();
+
+        }
+
+
+    }catch(error){
+
+        alert(
+            "Error de conexión: " +
+            error.message
+        );
+
+    }
 
 }
 
+
+/*
+|--------------------------------------------------------------------------
+| EDITAR USUARIO
+|--------------------------------------------------------------------------
+*/
+
 async function editarUsuario(id){
 
-    const usuario=prompt("Editar usuario:");
+    const usuario =
+        prompt(
+            "Editar usuario:"
+        );
 
-    if(usuario==null) return;
-
-    const nombre=prompt("Nuevo nombre:");
-
-    if(nombre==null) return;
-
-    const password=prompt("Nueva contraseña:");
-
-    if(password==null) return;
-
-    const r=await fetch("/api/usuarios/"+id,{
-
-        method:"PUT",
-
-        headers: authHeaders({
-
-            "Content-Type":"application/json"
-
-        }),
-
-        body:JSON.stringify({
-
-            usuario,
-
-            nombre,
-
-            password
-
-        })
-
-    });
-
-    if(r.status === 401 || r.status === 403){
-
-        localStorage.removeItem("token");
-
-        location.href="/index.html";
+    if(usuario === null){
 
         return;
 
     }
 
-    const j=await r.json();
 
-    alert(j.mensaje);
+    const nombre =
+        prompt(
+            "Nuevo nombre:"
+        );
 
-    cargarUsuarios();
+    if(nombre === null){
+
+        return;
+
+    }
+
+
+    const password =
+        prompt(
+            "Nueva contraseña:" +
+            "\n" +
+            "(Cancelar = conservar contraseña actual)"
+        );
+
+
+    const body = {
+
+        usuario:
+            usuario.trim(),
+
+        nombre:
+            nombre.trim()
+
+    };
+
+
+    if(password !== null){
+
+        body.password =
+            password;
+
+    }
+
+
+    try{
+
+        const r =
+            await fetch(
+                "/api/usuarios/" +
+                encodeURIComponent(id),
+                {
+                    method:"PUT",
+
+                    headers:
+                        authHeaders({
+                            "Content-Type":
+                                "application/json"
+                        }),
+
+                    body:
+                        JSON.stringify(body)
+                }
+            );
+
+
+        if(
+            r.status === 401 ||
+            r.status === 403
+        ){
+
+            sesionInvalida();
+
+            return;
+
+        }
+
+
+        const j =
+            await leerRespuesta(r);
+
+
+        alert(
+            j.mensaje ||
+            "Operación terminada."
+        );
+
+
+        if(j.ok){
+
+            cargarUsuarios();
+
+        }
+
+
+    }catch(error){
+
+        alert(
+            "Error de conexión: " +
+            error.message
+        );
+
+    }
 
 }
 
