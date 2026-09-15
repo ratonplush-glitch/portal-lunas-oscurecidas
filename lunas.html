@@ -205,41 +205,112 @@ Buscar
 
 <script>
 
-const token = localStorage.getItem("token");
+function obtenerToken(){
 
-const headers = {
-    Authorization: "Bearer " + token
-};
+    return localStorage.getItem("token");
+
+}
+
+function obtenerHeaders(){
+
+    const token = obtenerToken();
+
+    return {
+        "Authorization": "Bearer " + token
+    };
+
+}
+
+function verificarSesion(){
+
+    const token = obtenerToken();
+
+    if(!token){
+
+        alert("Sesión no válida. Inicie sesión nuevamente.");
+
+        window.location.href="/index.html";
+
+        return false;
+
+    }
+
+    return true;
+
+}
+
 
 async function cargarLunas(){
 
+    if(!verificarSesion()) return;
+
     try{
 
-        const respuesta = await fetch("/api/importar/lunas",{
-            headers
-        });
+        const token = localStorage.getItem("token");
+
+const respuesta = await fetch("/api/importar/lunas", {
+    headers: {
+        "Authorization": `Bearer ${token}`
+    }
+});
+
+const datos = await respuesta.json();
+
+
+        if(respuesta.status===401 || respuesta.status===403){
+
+            localStorage.removeItem("token");
+
+            alert("La sesión ha vencido. Inicie sesión nuevamente.");
+
+            window.location.href="/index.html";
+
+            return;
+
+        }
+
 
         const datos = await respuesta.json();
 
+
+        if(!Array.isArray(datos)){
+
+            console.error("Respuesta del servidor:",datos);
+
+            alert(datos.mensaje || "No se pudieron cargar los registros.");
+
+            return;
+
+        }
+
+
         let html="";
+
 
         datos.forEach(luna=>{
 
             html+=`
+
 <tr>
 
-<td>${luna.placa}</td>
-<td>${luna.propietario}</td>
-<td>${luna.nro_certificado}</td>
-<td>${luna.marca}</td>
-<td>${luna.modelo}</td>
+<td>${luna.placa || ""}</td>
+
+<td>${luna.propietario || ""}</td>
+
+<td>${luna.nro_certificado || ""}</td>
+
+<td>${luna.marca || ""}</td>
+
+<td>${luna.modelo || ""}</td>
 
 <td>
+
 <button
 class="ver"
-onclick="verPDF('${luna.archivo_pdf}')">
+onclick="verPDF('${luna.archivo_pdf || ""}')">
 VER PDF
 </button>
+
 </td>
 
 <td>
@@ -259,15 +330,18 @@ Eliminar
 </td>
 
 </tr>
+
 `;
 
         });
 
+
         document.getElementById("tablaLunas").innerHTML=html;
+
 
     }catch(error){
 
-        console.error(error);
+        console.error("ERROR CARGANDO LUNAS:",error);
 
         alert("Error al cargar los registros.");
 
@@ -275,114 +349,223 @@ Eliminar
 
 }
 
+
 function buscarPlaca(){
 
-    const texto=document.getElementById("buscar").value.toUpperCase();
+    const texto=document
+        .getElementById("buscar")
+        .value
+        .toUpperCase();
 
-    document.querySelectorAll("#tablaLunas tr").forEach(f=>{
+    document
+        .querySelectorAll("#tablaLunas tr")
+        .forEach(f=>{
 
-        f.style.display=f.innerText.toUpperCase().includes(texto)?"":"none";
+            f.style.display=
+                f.innerText
+                .toUpperCase()
+                .includes(texto)
+                ? ""
+                : "none";
 
-    });
+        });
 
 }
+
 
 function verPDF(pdf){
 
     if(!pdf){
 
         alert("No existe PDF.");
+
         return;
 
     }
 
-    window.open(pdf.startsWith("http") ? pdf : "/uploads/"+pdf,"_blank");
+    window.open(
+
+        pdf.startsWith("http")
+        ? pdf
+        : "/uploads/"+pdf,
+
+        "_blank"
+
+    );
 
 }
+
 
 async function editarRegistro(id){
 
+    if(!verificarSesion()) return;
+
+
     const placa=prompt("Placa:");
+
     if(placa==null)return;
 
+
     const propietario=prompt("Propietario:");
+
     if(propietario==null)return;
 
+
     const nro_certificado=prompt("N° Certificado:");
+
     if(nro_certificado==null)return;
 
+
     const categoria=prompt("Categoría:");
+
     if(categoria==null)return;
 
+
     const marca=prompt("Marca:");
+
     if(marca==null)return;
 
+
     const modelo=prompt("Modelo:");
+
     if(modelo==null)return;
 
+
     const color=prompt("Color:");
+
     if(color==null)return;
 
+
     const motor=prompt("Motor:");
+
     if(motor==null)return;
 
+
     const serie=prompt("Serie:");
+
     if(serie==null)return;
 
+
     const anio=prompt("Año:");
+
     if(anio==null)return;
 
-    const r=await fetch("/api/importar/lunas/"+id,{
 
-        method:"PUT",
+    const r=await fetch(
 
-        headers:{
-            "Content-Type":"application/json",
-            Authorization:"Bearer "+token
-        },
+        "/api/importar/lunas/"+id,
 
-        body:JSON.stringify({
-            placa,
-            propietario,
-            nro_certificado,
-            categoria,
-            marca,
-            modelo,
-            color,
-            motor,
-            serie,
-            anio
-        })
+        {
 
-    });
+            method:"PUT",
+
+            headers:{
+
+                "Content-Type":"application/json",
+
+                ...obtenerHeaders()
+
+            },
+
+            body:JSON.stringify({
+
+                placa,
+
+                propietario,
+
+                nro_certificado,
+
+                categoria,
+
+                marca,
+
+                modelo,
+
+                color,
+
+                motor,
+
+                serie,
+
+                anio
+
+            })
+
+        }
+
+    );
+
+
+    if(r.status===401 || r.status===403){
+
+        localStorage.removeItem("token");
+
+        alert("La sesión ha vencido. Inicie sesión nuevamente.");
+
+        window.location.href="/index.html";
+
+        return;
+
+    }
+
 
     const j=await r.json();
 
-    alert(j.mensaje);
+
+    alert(j.mensaje || "Registro actualizado.");
 
     cargarLunas();
 
 }
+
 
 async function eliminarRegistro(id){
 
-    if(!confirm("¿Desea eliminar este registro?")) return;
+    if(!verificarSesion()) return;
 
-    const r=await fetch("/api/importar/lunas/"+id,{
 
-        method:"DELETE",
+    if(!confirm("¿Desea eliminar este registro?"))
 
-        headers
+        return;
 
-    });
+
+    const r=await fetch(
+
+        "/api/importar/lunas/"+id,
+
+        {
+
+            method:"DELETE",
+
+            headers:obtenerHeaders()
+
+        }
+
+    );
+
+
+    if(r.status===401 || r.status===403){
+
+        localStorage.removeItem("token");
+
+        alert("La sesión ha vencido. Inicie sesión nuevamente.");
+
+        window.location.href="/index.html";
+
+        return;
+
+    }
+
 
     const j=await r.json();
 
-    alert(j.mensaje);
+
+    alert(j.mensaje || "Registro eliminado.");
 
     cargarLunas();
 
 }
+
 
 cargarLunas();
 
