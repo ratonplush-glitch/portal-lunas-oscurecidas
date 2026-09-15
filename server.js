@@ -690,7 +690,199 @@ async function parsePdf(buffer) {
 |--------------------------------------------------------------------------
 */
 
-    let fecha_emision = '';
+    /*
+|--------------------------------------------------------------------------
+| FECHA DE EMISIÓN - EXTRACCIÓN ROBUSTA DESDE EL PDF
+|--------------------------------------------------------------------------
+*/
+
+let fecha_emision = '';
+
+
+// Texto normalizado para soportar saltos de línea,
+// espacios múltiples y caracteres de acentuación.
+
+const textoFechaNormalizado =
+    texto
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/\r/g, ' ')
+        .replace(/\n/g, ' ')
+        .replace(/\t/g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+
+// ---------------------------------------------------------------
+// MÉTODO 1
+// Fecha de Emisión: 09/09/2026
+// Fecha de Emision: 09/09/2026
+// Fecha Emisión: 09/09/2026
+// ---------------------------------------------------------------
+
+let encontrado =
+    textoFechaNormalizado.match(
+        /Fecha\s*(?:de\s*)?Emision\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i
+    );
+
+if (encontrado) {
+
+    fecha_emision =
+        encontrado[1];
+
+}
+
+
+// ---------------------------------------------------------------
+// MÉTODO 2
+// Busca la etiqueta y cualquier fecha que aparezca
+// inmediatamente después de ella.
+// ---------------------------------------------------------------
+
+if (!fecha_emision) {
+
+    const posicion =
+        textoFechaNormalizado.search(
+            /Fecha\s*(?:de\s*)?Emision/i
+        );
+
+    if (posicion !== -1) {
+
+        const despues =
+            textoFechaNormalizado.substring(
+                posicion,
+                posicion + 250
+            );
+
+        const fecha =
+            despues.match(
+                /(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/
+            );
+
+        if (fecha) {
+
+            fecha_emision =
+                fecha[1];
+
+        }
+
+    }
+
+}
+
+
+// ---------------------------------------------------------------
+// MÉTODO 3
+// Algunos PDFs escriben EMISIÓN separado por espacios.
+// ---------------------------------------------------------------
+
+if (!fecha_emision) {
+
+    const posicion =
+        textoFechaNormalizado.search(
+            /F\s*e\s*c\s*h\s*a\s*(?:d\s*e\s*)?E\s*m\s*i\s*s\s*i\s*o\s*n/i
+        );
+
+    if (posicion !== -1) {
+
+        const despues =
+            textoFechaNormalizado.substring(
+                posicion,
+                posicion + 300
+            );
+
+        const fecha =
+            despues.match(
+                /(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/
+            );
+
+        if (fecha) {
+
+            fecha_emision =
+                fecha[1];
+
+        }
+
+    }
+
+}
+
+
+// ---------------------------------------------------------------
+// MÉTODO 4
+// Soporta fecha con espacios:
+// 09 / 09 / 2026
+// ---------------------------------------------------------------
+
+if (!fecha_emision) {
+
+    const posicion =
+        textoFechaNormalizado.search(
+            /Fecha\s*(?:de\s*)?Emision/i
+        );
+
+    if (posicion !== -1) {
+
+        const despues =
+            textoFechaNormalizado.substring(
+                posicion,
+                posicion + 300
+            );
+
+        const fecha =
+            despues.match(
+                /(\d{1,2})\s*[\/-]\s*(\d{1,2})\s*[\/-]\s*(\d{4})/
+            );
+
+        if (fecha) {
+
+            fecha_emision =
+                `${fecha[1]}/${fecha[2]}/${fecha[3]}`;
+
+        }
+
+    }
+
+}
+
+
+// ---------------------------------------------------------------
+// VALIDACIÓN
+// ---------------------------------------------------------------
+
+if (!fecha_emision) {
+
+    throw new Error(
+        'No se encontró la Fecha de Emisión en el PDF.'
+    );
+
+}
+
+
+// ---------------------------------------------------------------
+// NORMALIZAR
+// ---------------------------------------------------------------
+
+const partesFecha =
+    fecha_emision.match(
+        /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/
+    );
+
+if (partesFecha) {
+
+    const dia =
+        partesFecha[1].padStart(2, '0');
+
+    const mes =
+        partesFecha[2].padStart(2, '0');
+
+    const anio =
+        partesFecha[3];
+
+    fecha_emision =
+        `${dia}/${mes}/${anio}`;
+
+}
 
     const textoFecha =
         texto
