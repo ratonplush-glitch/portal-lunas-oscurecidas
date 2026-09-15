@@ -90,6 +90,7 @@ function tokenFor(user) {
 
 function auth(req, res, next) {
   const header = req.headers.authorization || '';
+
   const token = header.startsWith('Bearer ')
     ? header.slice(7)
     : '';
@@ -153,17 +154,25 @@ function limpiar(valor) {
     .trim();
 }
 
+function normalizarPlaca(valor) {
+  return String(valor || '')
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, '')
+    .trim();
+}
+
 /*
- * Extrae un campo del PDF sin llevarse el siguiente campo.
- * Los PDFs de la PNP no siempre ponen cada dato en una línea:
- * a veces varios campos aparecen en la misma línea.
+ * Extrae un campo del texto del PDF y se detiene cuando encuentra
+ * cualquiera de las etiquetas siguientes, aunque estén en la misma línea.
  */
 function extraerCampo(texto, campo) {
   const campos = [
     'Placa',
     'NRO',
     'Categoría',
+    'Categoria',
     'Carrocería',
+    'Carroceria',
     'Marca',
     'Modelo',
     'Color',
@@ -174,34 +183,57 @@ function extraerCampo(texto, campo) {
     'Fecha Emisión'
   ];
 
-  const campoEscapado = campo.replace(
-    /[.*+?^${}()|[\]\\]/g,
-    '\\$&'
-  );
+  const escapar = valor =>
+    valor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  const campoEscapado = escapar(campo);
 
   const siguientes = campos
     .filter(
       c => c.toLowerCase() !== campo.toLowerCase()
     )
-    .map(
-      c => c.replace(
-        /[.*+?^${}()|[\]\\]/g,
-        '\\$&'
-      )
-    )
+    .map(escapar)
     .join('|');
 
   const regex = new RegExp(
     campoEscapado +
     '\\s*:\\s*([\\s\\S]*?)(?=\\s+(?:' +
     siguientes +
-    ')\\s*:|$)',
+    ')\\s*:|\\s*$)',
     'i'
   );
 
   const m = texto.match(regex);
 
   return m ? limpiar(m[1]) : '';
+}
+
+function extraerPlaca(texto) {
+  const m = texto.match(
+    /Placa\s*:\s*([A-Z0-9]{5,8})(?=\s|$)/i
+  );
+
+  return m
+    ? normalizarPlaca(m[1])
+    : '';
+}
+
+function limpiarPropietario(valor) {
+  let propietario = limpiar(valor);
+
+  propietario = propietario
+    .replace(
+      /\s*DATOS\s+DEL\s+VEH[IÍ]CULO\s*:?.*$/i,
+      ''
+    )
+    .replace(
+      /\s*DATOS\s+DEL\s+SOLICITANTE\s*:?.*$/i,
+      ''
+    )
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+
+  return propietario;
 }
 
 async function parsePdf(buffer) {
@@ -211,65 +243,59 @@ async function parsePdf(buffer) {
     .replace(/\r/g, '')
     .replace(/\u00a0/g, ' ');
 
-  // IDENTIFICACIÓN
-  const placa = extraerCampo(
-    texto,
-    'Placa'
-  ).toUpperCase();
+  // PLACA: solamente el código de placa.
+  // No toma textos como "(AUTENTICA-02)".
+  const placa = extraerPlaca(texto);
 
-  const nro_certificado = extraerCampo(
+  // NÚMERO DE CERTIFICADO.
+  let nro_certificado = extraerCampo(
     texto,
     'NRO'
   ).toUpperCase();
 
-  // PROPIETARIO
+  const certificadoMatch =
+    nro_certificado.match(/[A-Z0-9]{5,20}/);
+
+  nro_certificado = certificadoMatch
+    ? certificadoMatch[0]
+    : '';
+
+  // PROPIETARIO.
   let propietario = dato(
     texto,
-    /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})\n/i
+    /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})(?=\s*\n|$)/i
   );
 
-  propietario = limpiar(propietario);
+  propietario = limpiarPropietario(propietario);
 
   if (!propietario) {
-    propietario = dato(
-      texto,
-      /PROPIETARIO\s*:\s*([^\n]+)/i
+    propietario = limpiarPropietario(
+      dato(
+        texto,
+        /PROPIETARIO\s*:\s*([^\n]+)/i
+      )
     );
   }
 
-  propietario = limpiar(propietario);
+  // DATOS DEL VEHÍCULO.
+  const categoria =
+    extraerCampo(texto, 'Categoría') ||
+    extraerCampo(texto, 'Categoria');
 
-  // DATOS DEL VEHÍCULO
-  // Cada campo se detiene exactamente al encontrar otro campo.
-  const categoria = extraerCampo(
-    texto,
-    'Categoría'
-  );
+  const marca =
+    extraerCampo(texto, 'Marca');
 
-  const marca = extraerCampo(
-    texto,
-    'Marca'
-  );
+  const modelo =
+    extraerCampo(texto, 'Modelo');
 
-  const modelo = extraerCampo(
-    texto,
-    'Modelo'
-  );
+  const color =
+    extraerCampo(texto, 'Color');
 
-  const color = extraerCampo(
-    texto,
-    'Color'
-  );
+  const motor =
+    extraerCampo(texto, 'Motor');
 
-  const motor = extraerCampo(
-    texto,
-    'Motor'
-  );
-
-  const serie = extraerCampo(
-    texto,
-    'Serie'
-  );
+  const serie =
+    extraerCampo(texto, 'Serie');
 
   // AÑO: solamente cuatro dígitos.
   const anio = dato(
@@ -353,7 +379,7 @@ app.post('/api/login', async (req, res) => {
   }
 });
 
-// Public consultation remains unauthenticated.
+// CONSULTA PÚBLICA
 app.get(
   '/api/importar/consulta/:tipo/:valor',
   async (req, res) => {
@@ -361,35 +387,81 @@ app.get(
       const database = await db();
 
       const tipo = req.params.tipo;
-
       const valor = String(
         req.params.valor || ''
       ).toUpperCase();
 
-      const query =
-        tipo === 'placa'
-          ? { placa: valor }
-          : tipo === 'certificado'
-            ? { nro_certificado: valor }
-            : null;
+      let registro = null;
 
-      if (!query) {
+      if (tipo === 'placa') {
+
+        const placaBuscada =
+          normalizarPlaca(valor);
+
+        // Primero busca el formato correcto.
+        registro = await database
+          .collection('lunas')
+          .findOne(
+            {
+              placa: placaBuscada
+            },
+            {
+              projection: {
+                _id: 0
+              }
+            }
+          );
+
+        // Compatibilidad con registros antiguos
+        // que hayan quedado con texto adicional.
+        if (!registro && placaBuscada) {
+
+          const escapedPlaca =
+            placaBuscada.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              '\\$&'
+            );
+
+          registro = await database
+            .collection('lunas')
+            .findOne(
+              {
+                placa: {
+                  $regex:
+                    `^${escapedPlaca}(?:\\s|\\(|$)`,
+                  $options: 'i'
+                }
+              },
+              {
+                projection: {
+                  _id: 0
+                }
+              }
+            );
+        }
+
+      } else if (tipo === 'certificado') {
+
+        registro = await database
+          .collection('lunas')
+          .findOne(
+            {
+              nro_certificado: valor
+            },
+            {
+              projection: {
+                _id: 0
+              }
+            }
+          );
+
+      } else {
+
         return res.json({
           ok: false,
           mensaje: 'Tipo de búsqueda no válido.'
         });
       }
-
-      const registro = await database
-        .collection('lunas')
-        .findOne(
-          query,
-          {
-            projection: {
-              _id: 0
-            }
-          }
-        );
 
       if (!registro) {
         return res.json({
@@ -419,20 +491,21 @@ app.get(
     try {
       const database = await db();
 
-      const rows = await database
-        .collection('lunas')
-        .find(
-          {},
-          {
-            projection: {
-              _id: 0
+      const rows =
+        await database
+          .collection('lunas')
+          .find(
+            {},
+            {
+              projection: {
+                _id: 0
+              }
             }
-          }
-        )
-        .sort({
-          createdAt: -1
-        })
-        .toArray();
+          )
+          .sort({
+            createdAt: -1
+          })
+          .toArray();
 
       res.json(rows);
 
@@ -451,6 +524,7 @@ app.post(
   upload.single('archivo'),
   async (req, res) => {
     try {
+
       if (!req.file) {
         return res.status(400).json({
           ok: false,
@@ -458,9 +532,8 @@ app.post(
         });
       }
 
-      const libro = xlsx.read(
-        req.file.buffer
-      );
+      const libro =
+        xlsx.read(req.file.buffer);
 
       const hoja =
         libro.Sheets[
@@ -493,6 +566,7 @@ app.post(
   upload.single('archivo'),
   async (req, res) => {
     try {
+
       if (!req.file) {
         return res.status(400).json({
           ok: false,
@@ -508,7 +582,8 @@ app.post(
       if (!registro.placa) {
         return res.status(400).json({
           ok: false,
-          mensaje: 'No se pudo extraer la placa del PDF.'
+          mensaje:
+            'No se pudo extraer la placa del PDF.'
         });
       }
 
@@ -519,15 +594,16 @@ app.post(
             '_'
           );
 
-      const blob = await put(
-        `pdf/${safeName}`,
-        req.file.buffer,
-        {
-          access: 'public',
-          contentType: 'application/pdf',
-          addRandomSuffix: false
-        }
-      );
+      const blob =
+        await put(
+          `pdf/${safeName}`,
+          req.file.buffer,
+          {
+            access: 'public',
+            contentType: 'application/pdf',
+            addRandomSuffix: false
+          }
+        );
 
       registro.archivo_pdf =
         blob.url;
@@ -549,6 +625,7 @@ app.post(
           });
 
       if (existing) {
+
         registro.id =
           existing.id ||
           registro.id;
@@ -572,10 +649,13 @@ app.post(
 
       res.json({
         ok: true,
-        mensaje: 'PDF importado correctamente',
+        mensaje:
+          'PDF importado correctamente',
         placa: registro.placa,
-        propietario: registro.propietario,
-        certificado: registro.nro_certificado
+        propietario:
+          registro.propietario,
+        certificado:
+          registro.nro_certificado
       });
 
     } catch (e) {
@@ -592,7 +672,9 @@ app.put(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const fields = [
         'placa',
@@ -629,13 +711,15 @@ app.put(
       if (!result.matchedCount) {
         return res.status(404).json({
           ok: false,
-          mensaje: 'Registro no encontrado'
+          mensaje:
+            'Registro no encontrado'
         });
       }
 
       res.json({
         ok: true,
-        mensaje: 'Registro actualizado correctamente'
+        mensaje:
+          'Registro actualizado correctamente'
       });
 
     } catch (e) {
@@ -652,7 +736,9 @@ app.delete(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const result =
         await database
@@ -664,13 +750,15 @@ app.delete(
       if (!result.deletedCount) {
         return res.status(404).json({
           ok: false,
-          mensaje: 'Registro no encontrado'
+          mensaje:
+            'Registro no encontrado'
         });
       }
 
       res.json({
         ok: true,
-        mensaje: 'Registro eliminado correctamente'
+        mensaje:
+          'Registro eliminado correctamente'
       });
 
     } catch (e) {
@@ -687,7 +775,9 @@ app.get(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const usuarios =
         await database
@@ -725,7 +815,9 @@ app.post(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const {
         usuario,
@@ -736,7 +828,8 @@ app.post(
       if (!usuario || !password) {
         return res.status(400).json({
           ok: false,
-          mensaje: 'Usuario y contraseña son obligatorios'
+          mensaje:
+            'Usuario y contraseña son obligatorios'
         });
       }
 
@@ -754,12 +847,14 @@ app.post(
               password,
               10
             ),
-          createdAt: new Date()
+          createdAt:
+            new Date()
         });
 
       res.json({
         ok: true,
-        mensaje: 'Usuario creado correctamente'
+        mensaje:
+          'Usuario creado correctamente'
       });
 
     } catch (e) {
@@ -779,7 +874,9 @@ app.put(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const {
         usuario,
@@ -815,13 +912,15 @@ app.put(
       if (!result.matchedCount) {
         return res.status(404).json({
           ok: false,
-          mensaje: 'Usuario no encontrado'
+          mensaje:
+            'Usuario no encontrado'
         });
       }
 
       res.json({
         ok: true,
-        mensaje: 'Usuario actualizado correctamente'
+        mensaje:
+          'Usuario actualizado correctamente'
       });
 
     } catch (e) {
@@ -841,7 +940,9 @@ app.delete(
   auth,
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       if (
         req.params.id ===
@@ -849,7 +950,8 @@ app.delete(
       ) {
         return res.status(400).json({
           ok: false,
-          mensaje: 'No puede eliminar su propio usuario'
+          mensaje:
+            'No puede eliminar su propio usuario'
         });
       }
 
@@ -863,13 +965,15 @@ app.delete(
       if (!result.deletedCount) {
         return res.status(404).json({
           ok: false,
-          mensaje: 'Usuario no encontrado'
+          mensaje:
+            'Usuario no encontrado'
         });
       }
 
       res.json({
         ok: true,
-        mensaje: 'Usuario eliminado correctamente'
+        mensaje:
+          'Usuario eliminado correctamente'
       });
 
     } catch (e) {
@@ -885,7 +989,9 @@ app.get(
   '/api/health',
   async (req, res) => {
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       await database.command({
         ping: 1
@@ -893,14 +999,17 @@ app.get(
 
       res.json({
         ok: true,
-        servicio: 'portal-lunas',
-        baseDatos: 'MongoDB'
+        servicio:
+          'portal-lunas',
+        baseDatos:
+          'MongoDB'
       });
 
     } catch (e) {
       res.status(500).json({
         ok: false,
-        mensaje: e.message
+        mensaje:
+          e.message
       });
     }
   }
@@ -912,7 +1021,8 @@ app.use(
 
     res.status(500).json({
       ok: false,
-      mensaje: 'Error interno del servidor'
+      mensaje:
+        'Error interno del servidor'
     });
   }
 );
