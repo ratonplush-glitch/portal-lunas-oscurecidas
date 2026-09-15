@@ -65,19 +65,24 @@ app.get('/', (req, res) => {
 
 app.get('/consulta', (req, res) => {
     res.sendFile(
-        path.join(PUBLIC, 'consulta.html')
+        path.join(__dirname, 'consulta.html')
     );
 });
 
 app.get('/panel', (req, res) => {
     res.sendFile(
-        path.join(PUBLIC, 'panel.html')
-    );
-});
+        path.join(__dirname, 'panel.html'),
+        (err) => {
+            if (err) {
+                console.error('ERROR CARGANDO PANEL:', err);
 
-app.get('/lunas', (req, res) => {
-    res.sendFile(
-        path.join(PUBLIC, 'lunas.html')
+                if (!res.headersSent) {
+                    res.status(500).send(
+                        'No se pudo cargar el panel de administración.'
+                    );
+                }
+            }
+        }
     );
 });
 
@@ -533,6 +538,8 @@ function limpiarPropietario(valor) {
 
     return propietario;
 }
+
+
 /*
 |--------------------------------------------------------------------------
 | PARSER PRINCIPAL DEL PDF
@@ -807,8 +814,6 @@ async function parsePdf(buffer) {
             ''
     };
 }
-
-
 /*
 |--------------------------------------------------------------------------
 | LOGIN
@@ -1118,6 +1123,8 @@ app.get(
         }
     }
 );
+
+
 /*
 |--------------------------------------------------------------------------
 | IMPORTAR EXCEL
@@ -1261,7 +1268,7 @@ app.post(
                 );
 
 
-*
+/*
 |--------------------------------------------------------------------------
 | LA PLACA ES OBLIGATORIA
 |--------------------------------------------------------------------------
@@ -1659,8 +1666,6 @@ app.put(
         }
     }
 );
-
-
 /*
 |--------------------------------------------------------------------------
 | ELIMINAR REGISTRO
@@ -1721,6 +1726,8 @@ app.delete(
         }
     }
 );
+
+
 /*
 |--------------------------------------------------------------------------
 | USUARIOS
@@ -2124,6 +2131,7 @@ app.use(
         if (
             res.headersSent
         ) {
+
             return next(err);
         }
 
