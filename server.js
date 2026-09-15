@@ -86,6 +86,23 @@ app.get('/panel', (req, res) => {
     );
 });
 
+app.get('/lunas', (req, res) => {
+    res.sendFile(
+        path.join(__dirname, 'lunas.html'),
+        (err) => {
+            if (err) {
+                console.error('ERROR CARGANDO LUNAS:', err);
+
+                if (!res.headersSent) {
+                    res.status(500).send(
+                        'No se pudo cargar la página de lunas oscurecidas.'
+                    );
+                }
+            }
+        }
+    );
+});
+
 app.get(
     '/permiso-lunas-polarizadas.html',
     (req, res) => {
