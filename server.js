@@ -9,93 +9,232 @@ const xlsx = require('xlsx');
 const pdf = require('pdf-parse');
 const { MongoClient } = require('mongodb');
 const { put } = require('@vercel/blob');
+
 require('dotenv').config();
 
 const app = express();
+
 app.set('trust proxy', 1);
+
 app.use(cors());
-app.use(express.json({ limit: '2mb' }));
+
+app.use(express.json({
+  limit: '2mb'
+}));
 
 const PUBLIC = __dirname;
 
-app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.use('/styles', express.static(path.join(__dirname, 'styles')));
-app.use('/services', express.static(path.join(__dirname, 'services')));
+/*
+|--------------------------------------------------------------------------
+| ARCHIVOS ESTÁTICOS
+|--------------------------------------------------------------------------
+*/
 
-// Vercel serves public/ automatically. These routes keep the original clean URLs.
-app.get('/', (req, res) => res.redirect('/consulta'));
-app.get('/consulta', (req, res) => res.sendFile(path.join(PUBLIC, 'consulta.html')));
-app.get('/panel', (req, res) => res.sendFile(path.join(PUBLIC, 'panel.html')));
-app.get('/lunas', (req, res) => res.sendFile(path.join(PUBLIC, 'lunas.html')));
-app.get('/permiso-lunas-polarizadas.html', (req, res) => res.sendFile(path.join(PUBLIC, 'permiso-lunas-polarizadas.html')));
-app.get('/permiso-lunas-polarizadas-peru.html', (req, res) => res.sendFile(path.join(PUBLIC, 'permiso-lunas-polarizadas-peru.html')));
-app.get('/sitemap.xml', (req, res) => res.sendFile(path.join(PUBLIC, 'sitemap.xml')));
-app.get('/robots.txt', (req, res) => res.sendFile(path.join(PUBLIC, 'robots.txt')));
+app.use(
+  '/assets',
+  express.static(
+    path.join(__dirname, 'assets')
+  )
+);
+
+app.use(
+  '/styles',
+  express.static(
+    path.join(__dirname, 'styles')
+  )
+);
+
+app.use(
+  '/services',
+  express.static(
+    path.join(__dirname, 'services')
+  )
+);
+
+/*
+|--------------------------------------------------------------------------
+| RUTAS PRINCIPALES
+|--------------------------------------------------------------------------
+*/
+
+app.get('/', (req, res) => {
+  res.redirect('/consulta');
+});
+
+app.get('/consulta', (req, res) => {
+  res.sendFile(
+    path.join(PUBLIC, 'consulta.html')
+  );
+});
+
+app.get('/panel', (req, res) => {
+  res.sendFile(
+    path.join(PUBLIC, 'panel.html')
+  );
+});
+
+app.get('/lunas', (req, res) => {
+  res.sendFile(
+    path.join(PUBLIC, 'lunas.html')
+  );
+});
+
+app.get(
+  '/permiso-lunas-polarizadas.html',
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        PUBLIC,
+        'permiso-lunas-polarizadas.html'
+      )
+    );
+  }
+);
+
+app.get(
+  '/permiso-lunas-polarizadas-peru.html',
+  (req, res) => {
+    res.sendFile(
+      path.join(
+        PUBLIC,
+        'permiso-lunas-polarizadas-peru.html'
+      )
+    );
+  }
+);
+
+app.get('/sitemap.xml', (req, res) => {
+  res.sendFile(
+    path.join(PUBLIC, 'sitemap.xml')
+  );
+});
+
+app.get('/robots.txt', (req, res) => {
+  res.sendFile(
+    path.join(PUBLIC, 'robots.txt')
+  );
+});
+
+/*
+|--------------------------------------------------------------------------
+| SUBIDA DE ARCHIVOS
+|--------------------------------------------------------------------------
+*/
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 20 * 1024 * 1024 }
+
+  limits: {
+    fileSize: 20 * 1024 * 1024
+  }
 });
+
+/*
+|--------------------------------------------------------------------------
+| MONGODB
+|--------------------------------------------------------------------------
+*/
 
 let mongoClient;
 let mongoDb;
 
 async function db() {
-  if (mongoDb) return mongoDb;
 
-  if (!process.env.MONGODB_URI) {
-    throw new Error('Falta configurar MONGODB_URI en Vercel.');
+  if (mongoDb) {
+    return mongoDb;
   }
 
-  mongoClient = new MongoClient(process.env.MONGODB_URI, {
-    maxPoolSize: 10,
-    serverSelectionTimeoutMS: 8000
-  });
+  if (!process.env.MONGODB_URI) {
+    throw new Error(
+      'Falta configurar MONGODB_URI en Vercel.'
+    );
+  }
+
+  mongoClient = new MongoClient(
+    process.env.MONGODB_URI,
+    {
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 8000
+    }
+  );
 
   await mongoClient.connect();
 
   mongoDb = mongoClient.db(
-    process.env.MONGODB_DB || 'portal_lunas'
+    process.env.MONGODB_DB ||
+    'portal_lunas'
   );
 
-  await mongoDb.collection('lunas').createIndex(
-    { placa: 1 },
-    { unique: true, sparse: true }
-  );
+  await mongoDb
+    .collection('lunas')
+    .createIndex(
+      { placa: 1 },
+      {
+        unique: true,
+        sparse: true
+      }
+    );
 
-  await mongoDb.collection('lunas').createIndex(
-    { nro_certificado: 1 }
-  );
+  await mongoDb
+    .collection('lunas')
+    .createIndex({
+      nro_certificado: 1
+    });
 
-  await mongoDb.collection('usuarios').createIndex(
-    { usuario: 1 },
-    { unique: true, sparse: true }
-  );
+  await mongoDb
+    .collection('usuarios')
+    .createIndex(
+      { usuario: 1 },
+      {
+        unique: true,
+        sparse: true
+      }
+    );
 
   return mongoDb;
 }
 
+/*
+|--------------------------------------------------------------------------
+| JWT
+|--------------------------------------------------------------------------
+*/
+
 function tokenFor(user) {
+
   return jwt.sign(
     {
       id: user.id,
       usuario: user.usuario
     },
-    process.env.JWT_SECRET || 'PORTAL_LUNAS_2026',
+
+    process.env.JWT_SECRET ||
+    'PORTAL_LUNAS_2026',
+
     {
       expiresIn: '8h'
     }
   );
 }
 
-function auth(req, res, next) {
-  const header = req.headers.authorization || '';
+/*
+|--------------------------------------------------------------------------
+| AUTENTICACIÓN
+|--------------------------------------------------------------------------
+*/
 
-  const token = header.startsWith('Bearer ')
-    ? header.slice(7)
-    : '';
+function auth(req, res, next) {
+
+  const header =
+    req.headers.authorization || '';
+
+  const token =
+    header.startsWith('Bearer ')
+      ? header.slice(7)
+      : '';
 
   if (!token) {
+
     return res.status(401).json({
       ok: false,
       mensaje: 'Token no proporcionado'
@@ -103,13 +242,17 @@ function auth(req, res, next) {
   }
 
   try {
+
     req.usuario = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'PORTAL_LUNAS_2026'
+      process.env.JWT_SECRET ||
+      'PORTAL_LUNAS_2026'
     );
 
     next();
+
   } catch {
+
     return res.status(403).json({
       ok: false,
       mensaje: 'Token inválido'
@@ -117,44 +260,93 @@ function auth(req, res, next) {
   }
 }
 
+/*
+|--------------------------------------------------------------------------
+| CREAR ADMINISTRADOR AUTOMÁTICAMENTE
+|--------------------------------------------------------------------------
+*/
+
 async function ensureAdmin() {
-  const user = process.env.ADMIN_USER;
-  const password = process.env.ADMIN_PASSWORD;
 
-  if (!user || !password) return;
+  const user =
+    process.env.ADMIN_USER;
 
-  const database = await db();
+  const password =
+    process.env.ADMIN_PASSWORD;
 
-  const exists = await database
-    .collection('usuarios')
-    .findOne({ usuario: user });
+  if (!user || !password) {
+    return;
+  }
+
+  const database =
+    await db();
+
+  const exists =
+    await database
+      .collection('usuarios')
+      .findOne({
+        usuario: user
+      });
 
   if (!exists) {
-    await database.collection('usuarios').insertOne({
-      id: crypto.randomUUID(),
-      usuario: user,
-      nombre: process.env.ADMIN_NAME || 'Administrador',
-      correo: process.env.ADMIN_EMAIL || '',
-      rol: 'admin',
-      estado: 1,
-      password: await bcrypt.hash(password, 10),
-      createdAt: new Date()
-    });
+
+    await database
+      .collection('usuarios')
+      .insertOne({
+
+        id: crypto.randomUUID(),
+
+        usuario: user,
+
+        nombre:
+          process.env.ADMIN_NAME ||
+          'Administrador',
+
+        correo:
+          process.env.ADMIN_EMAIL ||
+          '',
+
+        rol: 'admin',
+
+        estado: 1,
+
+        password:
+          await bcrypt.hash(
+            password,
+            10
+          ),
+
+        createdAt:
+          new Date()
+      });
   }
 }
 
+/*
+|--------------------------------------------------------------------------
+| FUNCIONES AUXILIARES
+|--------------------------------------------------------------------------
+*/
+
 function dato(texto, patron) {
-  const m = texto.match(patron);
-  return m ? m[1].trim() : '';
+
+  const m =
+    texto.match(patron);
+
+  return m
+    ? m[1].trim()
+    : '';
 }
 
 function limpiar(valor) {
+
   return String(valor || '')
     .replace(/\s+/g, ' ')
     .trim();
 }
 
 function normalizarPlaca(valor) {
+
   return String(valor || '')
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, '')
@@ -162,286 +354,603 @@ function normalizarPlaca(valor) {
 }
 
 /*
- * Extrae un campo del texto del PDF y se detiene cuando encuentra
- * cualquiera de las etiquetas siguientes, aunque estén en la misma línea.
- */
-function extraerCampo(texto, campo) {
+|--------------------------------------------------------------------------
+| ESCAPAR TEXTO PARA REGEX
+|--------------------------------------------------------------------------
+*/
+
+function escaparRegex(valor) {
+
+  return String(valor)
+    .replace(
+      /[.*+?^${}()|[\]\\]/g,
+      '\\$&'
+    );
+}
+
+/*
+|--------------------------------------------------------------------------
+| EXTRAER CAMPOS DEL PDF
+|--------------------------------------------------------------------------
+|
+| ESTA ES LA PARTE CORREGIDA.
+|
+| El problema anterior era que el texto del PDF podía colocar:
+|
+| COLOR: NEGRO MICA
+| OBSERVACION: LUNAS OSCURAS...
+|
+| y el extractor terminaba tomando todo el bloque.
+|
+| Ahora cada campo termina cuando aparece:
+|
+| - otro campo del vehículo
+| - OBSERVACION
+| - RESPONSABLE
+| - cualquier sección posterior
+|
+|--------------------------------------------------------------------------
+*/
+
+function extraerCampo(
+  texto,
+  campo
+) {
+
   const campos = [
+
     'Placa',
+
     'NRO',
+
+    'Nro',
+
+    'NRO Certificado',
+
+    'Nro Certificado',
+
     'Categoría',
+
     'Categoria',
+
     'Carrocería',
+
     'Carroceria',
+
     'Marca',
+
     'Modelo',
+
     'Color',
+
     'Motor',
+
     'Serie',
+
     'Año',
+
     'Fecha de Emisión',
-    'Fecha Emisión'
+
+    'Fecha Emisión',
+
+    'Fecha de emision',
+
+    'Fecha emision',
+
+    'OBSERVACION',
+
+    'OBSERVACIÓN',
+
+    'RESPONSABLE',
+
+    'DATOS DEL SOLICITANTE',
+
+    'DATOS DEL VEHÍCULO',
+
+    'DATOS DEL VEHICULO'
   ];
 
-  const escapar = valor =>
-    valor.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const campoEscapado =
+    escaparRegex(campo);
 
-  const campoEscapado = escapar(campo);
-
-  const siguientes = campos
-    .filter(
-      c => c.toLowerCase() !== campo.toLowerCase()
-    )
-    .map(escapar)
-    .join('|');
+  const siguientes =
+    campos
+      .filter(
+        c =>
+          c.toLowerCase() !==
+          campo.toLowerCase()
+      )
+      .map(escaparRegex)
+      .join('|');
 
   /*
-   * IMPORTANTE:
-   * El dato termina cuando:
-   * 1. aparece otro campo, o
-   * 2. termina la línea.
+   * El dato se detiene:
    *
-   * Esto evita que COLOR se lleve toda la sección
-   * de OBSERVACIONES del certificado.
+   * 1. Cuando aparece otro campo.
+   * 2. Cuando aparece OBSERVACION.
+   * 3. Cuando aparece RESPONSABLE.
+   * 4. Cuando termina el texto.
+   *
+   * Puede haber espacios o saltos
+   * de línea entre etiquetas.
    */
-  const regex = new RegExp(
-    campoEscapado +
-    '\\s*:\\s*([^\\r\\n]*?)(?=\\s+(?:' +
-    siguientes +
-    ')\\s*:|\\r?$)',
-    'i'
+
+  const regex =
+    new RegExp(
+      campoEscapado +
+      '\\s*:\\s*' +
+      '([\\s\\S]*?)' +
+      '(?=' +
+        '\\s+(?:' +
+          siguientes +
+        ')\\s*:' +
+      '|$)',
+      'i'
+    );
+
+  const m =
+    texto.match(regex);
+
+  if (!m) {
+    return '';
+  }
+
+  return limpiar(
+    m[1]
   );
-
-  const m = texto.match(regex);
-
-  return m
-    ? limpiar(m[1])
-    : '';
 }
+
+/*
+|--------------------------------------------------------------------------
+| PLACA
+|--------------------------------------------------------------------------
+*/
 
 function extraerPlaca(texto) {
-  const m = texto.match(
-    /Placa\s*:\s*([A-Z0-9]{5,8})(?=\s|$)/i
-  );
 
-  return m
-    ? normalizarPlaca(m[1])
-    : '';
+  /*
+   * Primero buscamos la forma normal:
+   *
+   * Placa: 12345W
+   */
+
+  let m =
+    texto.match(
+      /Placa\s*:\s*([A-Z0-9]{5,8})(?=\s|$)/i
+    );
+
+  if (m) {
+
+    return normalizarPlaca(
+      m[1]
+    );
+  }
+
+  /*
+   * Segundo intento:
+   * algunos PDF tienen espacios
+   * o saltos de línea diferentes.
+   */
+
+  m =
+    texto.match(
+      /Placa\s*:\s*([A-Z0-9][A-Z0-9\s-]{4,10})/i
+    );
+
+  if (m) {
+
+    const candidata =
+      m[1]
+        .replace(
+          /[\s-]/g,
+          ''
+        );
+
+    return normalizarPlaca(
+      candidata
+    );
+  }
+
+  return '';
 }
 
-function limpiarPropietario(valor) {
-  let propietario = limpiar(valor);
+/*
+|--------------------------------------------------------------------------
+| LIMPIAR PROPIETARIO
+|--------------------------------------------------------------------------
+*/
 
-  propietario = propietario
-    .replace(
+function limpiarPropietario(
+  valor
+) {
+
+  let propietario =
+    limpiar(valor);
+
+  propietario =
+    propietario.replace(
       /\s*DATOS\s+DEL\s+VEH[IÍ]CULO\s*:?.*$/i,
       ''
-    )
-    .replace(
+    );
+
+  propietario =
+    propietario.replace(
       /\s*DATOS\s+DEL\s+SOLICITANTE\s*:?.*$/i,
       ''
-    )
-    .replace(/\s{2,}/g, ' ')
-    .trim();
+    );
+
+  propietario =
+    propietario.replace(
+      /\s*PLACA\s*:?.*$/i,
+      ''
+    );
+
+  propietario =
+    propietario
+      .replace(/\s{2,}/g, ' ')
+      .trim();
 
   return propietario;
 }
 
-async function parsePdf(buffer) {
-  const resultado = await pdf(buffer);
+/*
+|--------------------------------------------------------------------------
+| PARSER PRINCIPAL DEL PDF
+|--------------------------------------------------------------------------
+*/
 
-  const texto = resultado.text
-    .replace(/\r/g, '')
-    .replace(/\u00a0/g, ' ');
+async function parsePdf(
+  buffer
+) {
 
-  // PLACA: solamente el código de placa.
-  // No toma textos como "(AUTENTICA-02)".
-  const placa = extraerPlaca(texto);
+  const resultado =
+    await pdf(buffer);
 
-  // NÚMERO DE CERTIFICADO.
-  let nro_certificado = extraerCampo(
-    texto,
-    'NRO'
-  ).toUpperCase();
+  const texto =
+    resultado.text
+      .replace(/\r/g, '')
+      .replace(/\u00a0/g, ' ');
+
+  /*
+   * PLACA
+   */
+
+  const placa =
+    extraerPlaca(texto);
+
+  /*
+   * NÚMERO DE CERTIFICADO
+   */
+
+  let nro_certificado =
+    extraerCampo(
+      texto,
+      'NRO'
+    ).toUpperCase();
+
+  /*
+   * Si el PDF devuelve texto
+   * adicional, nos quedamos
+   * solamente con el código.
+   */
 
   const certificadoMatch =
-    nro_certificado.match(/[A-Z0-9]{5,20}/);
+    nro_certificado.match(
+      /[A-Z0-9]{5,20}/
+    );
 
-  nro_certificado = certificadoMatch
-    ? certificadoMatch[0]
-    : '';
+  nro_certificado =
+    certificadoMatch
+      ? certificadoMatch[0]
+      : '';
 
-  // PROPIETARIO.
-  let propietario = dato(
-    texto,
-    /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})(?=\s*\n|$)/i
-  );
+  /*
+   * PROPIETARIO
+   */
 
-  propietario = limpiarPropietario(propietario);
+  let propietario =
+    dato(
+      texto,
+      /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})(?=\s*\n|$)/i
+    );
+
+  propietario =
+    limpiarPropietario(
+      propietario
+    );
+
+  /*
+   * Segundo método para propietario.
+   */
 
   if (!propietario) {
-    propietario = limpiarPropietario(
-      dato(
-        texto,
-        /PROPIETARIO\s*:\s*([^\n]+)/i
-      )
-    );
+
+    propietario =
+      limpiarPropietario(
+        dato(
+          texto,
+          /PROPIETARIO\s*:\s*([^\n]+)/i
+        )
+      );
   }
 
-  // DATOS DEL VEHÍCULO.
-  const categoria =
-    extraerCampo(texto, 'Categoría') ||
-    extraerCampo(texto, 'Categoria');
+  /*
+   * DATOS DEL VEHÍCULO
+   */
+
+  let categoria =
+    extraerCampo(
+      texto,
+      'Categoría'
+    );
+
+  if (!categoria) {
+
+    categoria =
+      extraerCampo(
+        texto,
+        'Categoria'
+      );
+  }
+
+  /*
+   * MARCA
+   */
 
   const marca =
-    extraerCampo(texto, 'Marca');
+    extraerCampo(
+      texto,
+      'Marca'
+    );
+
+  /*
+   * MODELO
+   */
 
   const modelo =
-    extraerCampo(texto, 'Modelo');
+    extraerCampo(
+      texto,
+      'Modelo'
+    );
+
+  /*
+   * COLOR
+   */
 
   const color =
-    extraerCampo(texto, 'Color');
+    extraerCampo(
+      texto,
+      'Color'
+    );
+
+  /*
+   * MOTOR
+   */
 
   const motor =
-    extraerCampo(texto, 'Motor');
+    extraerCampo(
+      texto,
+      'Motor'
+    );
+
+  /*
+   * SERIE
+   */
 
   const serie =
-    extraerCampo(texto, 'Serie');
+    extraerCampo(
+      texto,
+      'Serie'
+    );
 
-  // AÑO: solamente cuatro dígitos.
-  const anio = dato(
-    texto,
-    /Año\s*:\s*([0-9]{4})/i
-  );
+  /*
+   * AÑO
+   *
+   * Solamente cuatro números.
+   */
 
-  // FECHA DE EMISIÓN.
-  let fecha_emision = dato(
-    texto,
-    /Fecha\s*(?:de\s*)?Emisión\s*:\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
-  );
+  let anio =
+    dato(
+      texto,
+      /Año\s*:\s*([0-9]{4})/i
+    );
+
+  /*
+   * FECHA DE EMISIÓN
+   */
+
+  let fecha_emision =
+    dato(
+      texto,
+      /Fecha\s*(?:de\s*)?Emisión\s*:\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
+    );
+
+  /*
+   * Si no encuentra fecha,
+   * utiliza la fecha actual.
+   */
 
   if (!fecha_emision) {
-    fecha_emision = new Date();
+
+    fecha_emision =
+      new Date();
   }
 
+  /*
+   * RESULTADO FINAL
+   */
+
   return {
+
     placa,
-    numero_resolucion: '',
-    fecha_resolucion: new Date(),
+
+    numero_resolucion:
+      '',
+
+    fecha_resolucion:
+      new Date(),
+
     nro_certificado,
+
     propietario,
+
     categoria,
+
     marca,
+
     modelo,
+
     color,
+
     motor,
+
     serie,
+
     anio,
+
     fecha_emision,
-    video: '',
-    descripcion: ''
+
+    video:
+      '',
+
+    descripcion:
+      ''
   };
 }
 
-app.post('/api/login', async (req, res) => {
-  try {
-    await ensureAdmin();
+/*
+|--------------------------------------------------------------------------
+| LOGIN
+|--------------------------------------------------------------------------
+*/
 
-    const database = await db();
+app.post(
+  '/api/login',
+  async (req, res) => {
 
-    const {
-      usuario,
-      password
-    } = req.body || {};
+    try {
 
-    const user = await database
-      .collection('usuarios')
-      .findOne({ usuario });
+      await ensureAdmin();
 
-    if (
-      !user ||
-      !(await bcrypt.compare(
-        password || '',
-        user.password
-      ))
-    ) {
+      const database =
+        await db();
+
+      const {
+        usuario,
+        password
+      } = req.body || {};
+
+      const user =
+        await database
+          .collection('usuarios')
+          .findOne({
+            usuario
+          });
+
+      if (
+        !user ||
+        !(
+          await bcrypt.compare(
+            password || '',
+            user.password
+          )
+        )
+      ) {
+
+        return res.json({
+
+          ok: false,
+
+          mensaje:
+            'Usuario o contraseña incorrectos'
+        });
+      }
+
       return res.json({
+
+        ok: true,
+
+        mensaje:
+          'Bienvenido',
+
+        token:
+          tokenFor(user),
+
+        usuario: {
+
+          id:
+            user.id,
+
+          usuario:
+            user.usuario,
+
+          nombre:
+            user.nombre
+        }
+      });
+
+    } catch (e) {
+
+      return res.status(500).json({
+
         ok: false,
-        mensaje: 'Usuario o contraseña incorrectos'
+
+        mensaje:
+          e.message
       });
     }
-
-    return res.json({
-      ok: true,
-      mensaje: 'Bienvenido',
-      token: tokenFor(user),
-      usuario: {
-        id: user.id,
-        usuario: user.usuario,
-        nombre: user.nombre
-      }
-    });
-
-  } catch (e) {
-    return res.status(500).json({
-      ok: false,
-      mensaje: e.message
-    });
   }
-});
+);
 
-// CONSULTA PÚBLICA
+/*
+|--------------------------------------------------------------------------
+| CONSULTA PÚBLICA
+|--------------------------------------------------------------------------
+*/
+
 app.get(
   '/api/importar/consulta/:tipo/:valor',
   async (req, res) => {
-    try {
-      const database = await db();
 
-      const tipo = req.params.tipo;
-      const valor = String(
-        req.params.valor || ''
-      ).toUpperCase();
+    try {
+
+      const database =
+        await db();
+
+      const tipo =
+        String(
+          req.params.tipo || ''
+        ).toLowerCase();
+
+      const valor =
+        String(
+          req.params.valor || ''
+        ).toUpperCase()
+        .trim();
 
       let registro = null;
+
+      /*
+       * BUSCAR POR PLACA
+       */
 
       if (tipo === 'placa') {
 
         const placaBuscada =
           normalizarPlaca(valor);
 
-        // Primero busca el formato correcto.
-        registro = await database
-          .collection('lunas')
-          .findOne(
-            {
-              placa: placaBuscada
-            },
-            {
-              projection: {
-                _id: 0
-              }
-            }
-          );
+        /*
+         * Primero buscamos exactamente
+         * la placa limpia.
+         */
 
-        // Compatibilidad con registros antiguos
-        // que hayan quedado con texto adicional.
-        if (!registro && placaBuscada) {
-
-          const escapedPlaca =
-            placaBuscada.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              '\\$&'
-            );
-
-          registro = await database
+        registro =
+          await database
             .collection('lunas')
             .findOne(
               {
-                placa: {
-                  $regex:
-                    `^${escapedPlaca}(?:\\s|\\(|$)`,
-                  $options: 'i'
-                }
+                placa:
+                  placaBuscada
               },
               {
                 projection: {
@@ -449,58 +958,134 @@ app.get(
                 }
               }
             );
+
+        /*
+         * Compatibilidad con registros
+         * antiguos que pudieran tener
+         * texto adicional en la placa.
+         */
+
+        if (
+          !registro &&
+          placaBuscada
+        ) {
+
+          const escapedPlaca =
+            placaBuscada.replace(
+              /[.*+?^${}()|[\]\\]/g,
+              '\\$&'
+            );
+
+          registro =
+            await database
+              .collection('lunas')
+              .findOne(
+                {
+                  placa: {
+                    $regex:
+                      `^${escapedPlaca}(?:\\s|\\(|$)`,
+
+                    $options:
+                      'i'
+                  }
+                },
+                {
+                  projection: {
+                    _id: 0
+                  }
+                }
+              );
         }
 
-      } else if (tipo === 'certificado') {
+      /*
+       * BUSCAR POR CERTIFICADO
+       */
 
-        registro = await database
-          .collection('lunas')
-          .findOne(
-            {
-              nro_certificado: valor
-            },
-            {
-              projection: {
-                _id: 0
+      } else if (
+        tipo === 'certificado'
+      ) {
+
+        registro =
+          await database
+            .collection('lunas')
+            .findOne(
+              {
+                nro_certificado:
+                  valor
+              },
+              {
+                projection: {
+                  _id: 0
+                }
               }
-            }
-          );
+            );
 
       } else {
 
         return res.json({
+
           ok: false,
-          mensaje: 'Tipo de búsqueda no válido.'
+
+          mensaje:
+            'Tipo de búsqueda no válido.'
         });
       }
+
+      /*
+       * NO ENCONTRADO
+       */
 
       if (!registro) {
+
         return res.json({
+
           ok: false,
-          mensaje: 'No se encontró ningún registro.'
+
+          mensaje:
+            'No se encontró ningún registro.'
         });
       }
 
+      /*
+       * DEVOLVER REGISTRO
+       */
+
       return res.json({
+
         ok: true,
+
         registro
       });
 
     } catch (e) {
+
       return res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| LISTAR LUNAS
+|--------------------------------------------------------------------------
+*/
+
 app.get(
   '/api/importar/lunas',
   auth,
   async (req, res) => {
+
     try {
-      const database = await db();
+
+      const database =
+        await db();
 
       const rows =
         await database
@@ -521,30 +1106,49 @@ app.get(
       res.json(rows);
 
     } catch (e) {
+
       res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| IMPORTAR EXCEL
+|--------------------------------------------------------------------------
+*/
+
 app.post(
   '/api/importar/excel',
   auth,
   upload.single('archivo'),
+
   async (req, res) => {
+
     try {
 
       if (!req.file) {
+
         return res.status(400).json({
+
           ok: false,
-          mensaje: 'No se recibió ningún archivo Excel'
+
+          mensaje:
+            'No se recibió ningún archivo Excel'
         });
       }
 
       const libro =
-        xlsx.read(req.file.buffer);
+        xlsx.read(
+          req.file.buffer
+        );
 
       const hoja =
         libro.Sheets[
@@ -557,46 +1161,116 @@ app.post(
         );
 
       res.json({
+
         ok: true,
-        total: datos.length,
-        registros: datos
+
+        total:
+          datos.length,
+
+        registros:
+          datos
       });
 
     } catch (e) {
+
       res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| IMPORTAR PDF
+|--------------------------------------------------------------------------
+*/
+
 app.post(
   '/api/importar/pdf',
   auth,
   upload.single('archivo'),
+
   async (req, res) => {
+
     try {
 
+      /*
+       * Verificar archivo
+       */
+
       if (!req.file) {
+
         return res.status(400).json({
+
           ok: false,
-          mensaje: 'No se recibió ningún PDF'
+
+          mensaje:
+            'No se recibió ningún PDF'
         });
       }
+
+      /*
+       * Verificar que realmente
+       * sea un PDF.
+       */
+
+      const nombre =
+        String(
+          req.file.originalname || ''
+        ).toLowerCase();
+
+      const mime =
+        String(
+          req.file.mimetype || ''
+        ).toLowerCase();
+
+      if (
+        !nombre.endsWith('.pdf') &&
+        mime !== 'application/pdf'
+      ) {
+
+        return res.status(400).json({
+
+          ok: false,
+
+          mensaje:
+            'El archivo debe ser un PDF.'
+        });
+      }
+
+      /*
+       * EXTRAER DATOS
+       */
 
       const registro =
         await parsePdf(
           req.file.buffer
         );
 
+      /*
+       * La placa es obligatoria.
+       */
+
       if (!registro.placa) {
+
         return res.status(400).json({
+
           ok: false,
+
           mensaje:
             'No se pudo extraer la placa del PDF.'
         });
       }
+
+      /*
+       * Nombre seguro para Vercel Blob.
+       */
 
       const safeName =
         `${registro.placa}-${Date.now()}.pdf`
@@ -605,35 +1279,74 @@ app.post(
             '_'
           );
 
+      /*
+       * SUBIR PDF A VERCEL BLOB
+       */
+
       const blob =
         await put(
           `pdf/${safeName}`,
+
           req.file.buffer,
+
           {
-            access: 'public',
-            contentType: 'application/pdf',
-            addRandomSuffix: false
+            access:
+              'public',
+
+            contentType:
+              'application/pdf',
+
+            addRandomSuffix:
+              false
           }
         );
+
+      /*
+       * Guardar URL permanente
+       * del PDF.
+       */
 
       registro.archivo_pdf =
         blob.url;
 
+      /*
+       * ID DEL REGISTRO
+       */
+
       registro.id =
         crypto.randomUUID();
+
+      /*
+       * FECHA DE CREACIÓN
+       */
 
       registro.createdAt =
         new Date();
 
+      /*
+       * CONECTAR MONGODB
+       */
+
       const database =
         await db();
+
+      /*
+       * Revisar si la placa
+       * ya existe.
+       */
 
       const existing =
         await database
           .collection('lunas')
           .findOne({
-            placa: registro.placa
+            placa:
+              registro.placa
           });
+
+      /*
+       * Si ya existe, conservar
+       * su ID y fecha original.
+       */
 
       if (existing) {
 
@@ -646,106 +1359,226 @@ app.post(
           registro.createdAt;
       }
 
+      /*
+       * GUARDAR / ACTUALIZAR
+       */
+
       await database
         .collection('lunas')
         .replaceOne(
+
           {
-            placa: registro.placa
+            placa:
+              registro.placa
           },
+
           registro,
+
           {
-            upsert: true
+            upsert:
+              true
           }
         );
 
-      res.json({
+      /*
+       * RESPUESTA
+       */
+
+      return res.json({
+
         ok: true,
+
         mensaje:
           'PDF importado correctamente',
-        placa: registro.placa,
+
+        placa:
+          registro.placa,
+
         propietario:
           registro.propietario,
+
         certificado:
           registro.nro_certificado
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      console.error(
+        'ERROR IMPORTANDO PDF:',
+        e
+      );
+
+      return res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| ACTUALIZAR REGISTRO DE LUNAS
+|--------------------------------------------------------------------------
+*/
+
 app.put(
   '/api/importar/lunas/:id',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
         await db();
 
       const fields = [
+
         'placa',
+
         'propietario',
+
         'nro_certificado',
+
         'categoria',
+
         'marca',
+
         'modelo',
+
         'color',
+
         'motor',
+
         'serie',
-        'anio'
+
+        'anio',
+
+        'fecha_emision'
       ];
 
       const update = {};
 
-      for (const f of fields) {
+      for (
+        const f of fields
+      ) {
+
         update[f] =
           req.body?.[f] ?? '';
+      }
+
+      /*
+       * Normalizar placa antes
+       * de guardar manualmente.
+       */
+
+      if (update.placa) {
+
+        update.placa =
+          normalizarPlaca(
+            update.placa
+          );
+      }
+
+      /*
+       * Limpiar campos de texto.
+       */
+
+      for (
+        const f of [
+          'propietario',
+          'nro_certificado',
+          'categoria',
+          'marca',
+          'modelo',
+          'color',
+          'motor',
+          'serie',
+          'anio',
+          'fecha_emision'
+        ]
+      ) {
+
+        if (
+          typeof update[f] ===
+          'string'
+        ) {
+
+          update[f] =
+            limpiar(
+              update[f]
+            );
+        }
       }
 
       const result =
         await database
           .collection('lunas')
           .updateOne(
+
             {
-              id: req.params.id
+              id:
+                req.params.id
             },
+
             {
-              $set: update
+              $set:
+                update
             }
           );
 
-      if (!result.matchedCount) {
+      if (
+        !result.matchedCount
+      ) {
+
         return res.status(404).json({
+
           ok: false,
+
           mensaje:
             'Registro no encontrado'
         });
       }
 
       res.json({
+
         ok: true,
+
         mensaje:
           'Registro actualizado correctamente'
       });
 
     } catch (e) {
+
       res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| ELIMINAR REGISTRO
+|--------------------------------------------------------------------------
+*/
+
 app.delete(
   '/api/importar/lunas/:id',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
@@ -755,36 +1588,56 @@ app.delete(
         await database
           .collection('lunas')
           .deleteOne({
-            id: req.params.id
+
+            id:
+              req.params.id
           });
 
-      if (!result.deletedCount) {
+      if (
+        !result.deletedCount
+      ) {
+
         return res.status(404).json({
+
           ok: false,
+
           mensaje:
             'Registro no encontrado'
         });
       }
 
       res.json({
+
         ok: true,
+
         mensaje:
           'Registro eliminado correctamente'
       });
 
     } catch (e) {
+
       res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
+/*
+|--------------------------------------------------------------------------
+| USUARIOS
+|--------------------------------------------------------------------------
+*/
 
 app.get(
   '/api/usuarios',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
@@ -807,24 +1660,39 @@ app.get(
           })
           .toArray();
 
-      res.json({
+      return res.json({
+
         ok: true,
+
         usuarios
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      return res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| CREAR USUARIO
+|--------------------------------------------------------------------------
+*/
+
 app.post(
   '/api/usuarios',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
@@ -836,9 +1704,15 @@ app.post(
         password
       } = req.body || {};
 
-      if (!usuario || !password) {
+      if (
+        !usuario ||
+        !password
+      ) {
+
         return res.status(400).json({
+
           ok: false,
+
           mensaje:
             'Usuario y contraseña son obligatorios'
         });
@@ -847,30 +1721,49 @@ app.post(
       await database
         .collection('usuarios')
         .insertOne({
-          id: crypto.randomUUID(),
-          usuario,
-          nombre: nombre || '',
-          correo: '',
-          rol: 'admin',
-          estado: 1,
+
+          id:
+            crypto.randomUUID(),
+
+          usuario:
+            String(usuario).trim(),
+
+          nombre:
+            String(nombre || '').trim(),
+
+          correo:
+            '',
+
+          rol:
+            'admin',
+
+          estado:
+            1,
+
           password:
             await bcrypt.hash(
               password,
               10
             ),
+
           createdAt:
             new Date()
         });
 
-      res.json({
+      return res.json({
+
         ok: true,
+
         mensaje:
           'Usuario creado correctamente'
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      return res.status(500).json({
+
         ok: false,
+
         mensaje:
           e.code === 11000
             ? 'El usuario ya existe'
@@ -880,10 +1773,19 @@ app.post(
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| ACTUALIZAR USUARIO
+|--------------------------------------------------------------------------
+*/
+
 app.put(
   '/api/usuarios/:id',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
@@ -896,11 +1798,22 @@ app.put(
       } = req.body || {};
 
       const update = {
-        usuario,
-        nombre
+
+        usuario:
+          String(usuario || '').trim(),
+
+        nombre:
+          String(nombre || '').trim()
       };
 
+      /*
+       * La contraseña solamente
+       * se cambia si se proporciona
+       * una nueva.
+       */
+
       if (password) {
+
         update.password =
           await bcrypt.hash(
             password,
@@ -912,31 +1825,45 @@ app.put(
         await database
           .collection('usuarios')
           .updateOne(
+
             {
-              id: req.params.id
+              id:
+                req.params.id
             },
+
             {
-              $set: update
+              $set:
+                update
             }
           );
 
-      if (!result.matchedCount) {
+      if (
+        !result.matchedCount
+      ) {
+
         return res.status(404).json({
+
           ok: false,
+
           mensaje:
             'Usuario no encontrado'
         });
       }
 
-      res.json({
+      return res.json({
+
         ok: true,
+
         mensaje:
           'Usuario actualizado correctamente'
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      return res.status(500).json({
+
         ok: false,
+
         mensaje:
           e.code === 11000
             ? 'El usuario ya existe'
@@ -946,21 +1873,38 @@ app.put(
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| ELIMINAR USUARIO
+|--------------------------------------------------------------------------
+*/
+
 app.delete(
   '/api/usuarios/:id',
   auth,
+
   async (req, res) => {
+
     try {
 
       const database =
         await db();
 
+      /*
+       * Evitar que el administrador
+       * elimine su propio usuario.
+       */
+
       if (
         req.params.id ===
         req.usuario.id
       ) {
+
         return res.status(400).json({
+
           ok: false,
+
           mensaje:
             'No puede eliminar su propio usuario'
         });
@@ -970,35 +1914,57 @@ app.delete(
         await database
           .collection('usuarios')
           .deleteOne({
-            id: req.params.id
+
+            id:
+              req.params.id
           });
 
-      if (!result.deletedCount) {
+      if (
+        !result.deletedCount
+      ) {
+
         return res.status(404).json({
+
           ok: false,
+
           mensaje:
             'Usuario no encontrado'
         });
       }
 
-      res.json({
+      return res.json({
+
         ok: true,
+
         mensaje:
           'Usuario eliminado correctamente'
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      return res.status(500).json({
+
         ok: false,
-        mensaje: e.message
+
+        mensaje:
+          e.message
       });
     }
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| HEALTH CHECK
+|--------------------------------------------------------------------------
+*/
+
 app.get(
   '/api/health',
+
   async (req, res) => {
+
     try {
 
       const database =
@@ -1008,17 +1974,23 @@ app.get(
         ping: 1
       });
 
-      res.json({
+      return res.json({
+
         ok: true,
+
         servicio:
           'portal-lunas',
+
         baseDatos:
           'MongoDB'
       });
 
     } catch (e) {
-      res.status(500).json({
+
+      return res.status(500).json({
+
         ok: false,
+
         mensaje:
           e.message
       });
@@ -1026,30 +1998,75 @@ app.get(
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| MANEJO GLOBAL DE ERRORES
+|--------------------------------------------------------------------------
+*/
+
 app.use(
   (err, req, res, next) => {
-    console.error(err);
 
-    res.status(500).json({
+    console.error(
+      'ERROR DEL SERVIDOR:',
+      err
+    );
+
+    if (
+      res.headersSent
+    ) {
+      return next(err);
+    }
+
+    return res.status(500).json({
+
       ok: false,
+
       mensaje:
         'Error interno del servidor'
     });
   }
 );
 
+
+/*
+|--------------------------------------------------------------------------
+| EXPORTAR APP PARA VERCEL
+|--------------------------------------------------------------------------
+*/
+
 module.exports = app;
 
-if (require.main === module) {
+
+/*
+|--------------------------------------------------------------------------
+| SERVIDOR LOCAL
+|--------------------------------------------------------------------------
+|
+| Esto solamente se ejecuta cuando
+| ejecutamos server.js directamente.
+|
+| En Vercel se utiliza module.exports.
+|
+|--------------------------------------------------------------------------
+*/
+
+if (
+  require.main === module
+) {
+
   const port =
     process.env.PORT || 3000;
 
   app.listen(
     port,
     '0.0.0.0',
-    () =>
+    () => {
+
       console.log(
         `Portal corriendo en puerto ${port}`
-      )
+      );
+    }
   );
 }
