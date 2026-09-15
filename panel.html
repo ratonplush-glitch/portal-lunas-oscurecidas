@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Panel de Administración</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:white;
+}
+
+header{
+background:#1e293b;
+padding:20px 40px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header h1{
+font-size:30px;
+}
+
+.cerrar{
+background:#dc2626;
+border:none;
+padding:12px 22px;
+color:white;
+font-weight:bold;
+border-radius:8px;
+cursor:pointer;
+}
+
+.contenedor{
+width:95%;
+margin:25px auto;
+}
+
+h2{
+margin-bottom:15px;
+}
+
+form{
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+margin-bottom:25px;
+}
+
+input[type=file]{
+margin-bottom:15px;
+}
+
+button{
+padding:12px 22px;
+background:#2563eb;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+}
+
+button:hover{
+background:#1d4ed8;
+}
+
+#resultado{
+margin-top:20px;
+margin-bottom:30px;
+padding:15px;
+background:#1e293b;
+border-radius:10px;
+}
+
+.tarjetas{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
+gap:20px;
+}
+
+.card{
+background:#1e293b;
+padding:35px;
+border-radius:12px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+cursor:pointer;
+transition:.3s;
+}
+
+.card:hover{
+background:#2563eb;
+transform:translateY(-5px);
+}
+
+.panelTabla{
+display:none;
+margin-top:35px;
+background:#1e293b;
+padding:20px;
+border-radius:10px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+table th{
+background:#2563eb;
+padding:12px;
+}
+
+table td{
+padding:12px;
+border-bottom:1px solid #444;
+}
+
+.btnEditar{
+background:#16a34a;
+}
+
+.btnEliminar{
+background:#dc2626;
+}
+
+.btnNuevo{
+background:#2563eb;
+margin-bottom:15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>PORTAL DE LUNAS OSCURECIDAS</h1>
+
+<button class="cerrar" onclick="salir()">
+Cerrar sesión
+</button>
+
+</header>
+
+<div class="contenedor">
+
+<h2>IMPORTAR CERTIFICADO PDF</h2>
+
+<form id="formPDF">
+
+<input
+type="file"
+id="archivoPDF"
+accept=".pdf"
+required>
+
+<br>
+
+<button type="submit">
+IMPORTAR PDF
+</button>
+
+</form>
+
+<div id="resultado"></div>
+
+<div class="tarjetas">
+
+<div class="card" onclick="cargarUsuarios()">
+👤 Usuarios
+</div>
+
+<div class="card">
+🔍 Consultas
+</div>
+
+<div class="card">
+🚗 Vehículos
+</div>
+
+<div class="card" onclick="location.href='/lunas'">
+🕶 Lunas Oscurecidas
+</div>
+
+<div class="card">
+📊 Reportes
+</div>
+
+<div class="card">
+⚙ Configuración
+</div>
+
+</div>
+
+<div class="panelTabla" id="panelUsuarios">
+
+<h2>Usuarios Registrados</h2>
+
+<button class="btnNuevo" onclick="nuevoUsuario()">
++ Nuevo Usuario
+</button>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+<th>Usuario</th>
+<th>Nombre</th>
+<th>Correo</th>
+<th>Rol</th>
+<th>Estado</th>
+<th>Acciones</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaUsuarios">
+
+</tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script>
+
+if(sessionStorage.getItem("admin")!="ok"){
+    location.href="/index.html";
+}
+
+const token = localStorage.getItem("token");
+
+function authHeaders(extra = {}) {
+    return {
+        Authorization: "Bearer " + token,
+        ...extra
+    };
+}
+
+function salir(){
+    sessionStorage.clear();
+    localStorage.removeItem("token");
+    location.href="/index.html";
+}
+
+document.getElementById("formPDF").addEventListener("submit",async(e)=>{
+
+    e.preventDefault();
+
+    const archivo=document.getElementById("archivoPDF").files[0];
+
+    const datos=new FormData();
+    datos.append("archivo",archivo);
+
+    const r=await fetch("/api/importar/pdf",{
+        method:"POST",
+        headers: authHeaders(),
+        body:datos
+    });
+
+    const j=await r.json();
+
+    document.getElementById("resultado").innerHTML="<pre>"+JSON.stringify(j,null,2)+"</pre>";
+
+});
+
+async function cargarUsuarios(){
+
+    document.getElementById("panelUsuarios").style.display="block";
+
+    const r=await fetch("/api/usuarios",{
+        headers: authHeaders()
+    });
+
+    const datos=await r.json();
+
+    let html="";
+
+    (datos.usuarios || []).forEach(u=>{
+
+        html+=`
+
+<tr>
+
+<td>${u.id}</td>
+<td>${u.usuario}</td>
+<td>${u.nombre}</td>
+<td>${u.correo??""}</td>
+<td>${u.rol??""}</td>
+<td>${u.estado??""}</td>
+
+<td>
+
+<button
+class="btnEditar"
+onclick="editarUsuario(${u.id})">
+Editar
+</button>
+
+<button
+class="btnEliminar"
+onclick="eliminarUsuario(${u.id})">
+Eliminar
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+    });
+
+    document.getElementById("tablaUsuarios").innerHTML=html;
+
+}
+
+async function eliminarUsuario(id){
+
+    if(!confirm("¿Desea eliminar este usuario?")) return;
+
+    const r=await fetch("/api/usuarios/"+id,{
+        method:"DELETE",
+        headers: authHeaders()
+    });
+
+    const j=await r.json();
+
+    alert(j.mensaje);
+
+    cargarUsuarios();
+
+}
+
+async function editarUsuario(id){
+
+    const usuario=prompt("Editar usuario:");
+
+    if(usuario==null) return;
+
+    const nombre=prompt("Nuevo nombre:");
+
+    if(nombre==null) return;
+
+    const password=prompt("Nueva contraseña:");
+
+    if(password==null) return;
+
+    const r=await fetch("/api/usuarios/"+id,{
+
+        method:"PUT",
+
+        headers: authHeaders({
+            "Content-Type":"application/json"
+        }),
+
+        body:JSON.stringify({
+            usuario,
+            nombre,
+            password
+        })
+
+    });
+
+    const j=await r.json();
+
+    alert(j.mensaje);
+
+    cargarUsuarios();
+
+}
+
+</script>
+
+</body>
+</html>

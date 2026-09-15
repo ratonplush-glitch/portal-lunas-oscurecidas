@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Lunas Oscurecidas</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Arial,Helvetica,sans-serif;
+}
+
+body{
+background:#0f172a;
+color:#fff;
+}
+
+header{
+
+background:#1e293b;
+padding:20px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+
+}
+
+h1{
+
+font-size:28px;
+
+}
+
+button{
+
+padding:10px 20px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+font-weight:bold;
+
+}
+
+.volver{
+
+background:#2563eb;
+color:white;
+
+}
+
+.actualizar{
+
+background:#16a34a;
+color:white;
+
+}
+
+.contenedor{
+
+width:95%;
+margin:30px auto;
+
+}
+
+.busqueda{
+
+display:flex;
+gap:10px;
+margin-bottom:20px;
+
+}
+
+input{
+
+padding:10px;
+width:300px;
+border-radius:6px;
+border:none;
+
+}
+
+table{
+
+width:100%;
+border-collapse:collapse;
+background:#1e293b;
+
+}
+
+th{
+
+background:#2563eb;
+padding:12px;
+
+}
+
+td{
+
+padding:12px;
+border-bottom:1px solid #334155;
+text-align:center;
+
+}
+
+.ver{
+
+background:#16a34a;
+color:white;
+
+}
+
+.editar{
+
+background:#eab308;
+color:black;
+
+}
+
+.eliminar{
+
+background:#dc2626;
+color:white;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>ADMINISTRAR LUNAS OSCURECIDAS</h1>
+
+<div>
+
+<button class="volver" onclick="window.location='panel.html'">
+
+Volver
+
+</button>
+
+<button class="actualizar" onclick="cargarLunas()">
+
+Actualizar
+
+</button>
+
+</div>
+
+</header>
+
+<div class="contenedor">
+
+<div class="busqueda">
+
+<input
+type="text"
+id="buscar"
+placeholder="Buscar placa..."
+>
+
+<button onclick="buscarPlaca()">
+
+Buscar
+
+</button>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>PLACA</th>
+<th>PROPIETARIO</th>
+<th>CERTIFICADO</th>
+<th>MARCA</th>
+<th>MODELO</th>
+<th>PDF</th>
+<th>ACCIONES</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tablaLunas">
+
+</tbody>
+
+</table>
+
+</div>
+
+<script>
+
+const token = localStorage.getItem("token");
+
+const headers = {
+    Authorization: "Bearer " + token
+};
+
+async function cargarLunas(){
+
+    try{
+
+        const respuesta = await fetch("/api/importar/lunas",{
+            headers
+        });
+
+        const datos = await respuesta.json();
+
+        let html="";
+
+        datos.forEach(luna=>{
+
+            html+=`
+<tr>
+
+<td>${luna.placa}</td>
+<td>${luna.propietario}</td>
+<td>${luna.nro_certificado}</td>
+<td>${luna.marca}</td>
+<td>${luna.modelo}</td>
+
+<td>
+<button
+class="ver"
+onclick="verPDF('${luna.archivo_pdf}')">
+VER PDF
+</button>
+</td>
+
+<td>
+
+<button
+class="editar"
+onclick="editarRegistro('${luna.id}')">
+Editar
+</button>
+
+<button
+class="eliminar"
+onclick="eliminarRegistro('${luna.id}')">
+Eliminar
+</button>
+
+</td>
+
+</tr>
+`;
+
+        });
+
+        document.getElementById("tablaLunas").innerHTML=html;
+
+    }catch(error){
+
+        console.error(error);
+
+        alert("Error al cargar los registros.");
+
+    }
+
+}
+
+function buscarPlaca(){
+
+    const texto=document.getElementById("buscar").value.toUpperCase();
+
+    document.querySelectorAll("#tablaLunas tr").forEach(f=>{
+
+        f.style.display=f.innerText.toUpperCase().includes(texto)?"":"none";
+
+    });
+
+}
+
+function verPDF(pdf){
+
+    if(!pdf){
+
+        alert("No existe PDF.");
+        return;
+
+    }
+
+    window.open(pdf.startsWith("http") ? pdf : "/uploads/"+pdf,"_blank");
+
+}
+
+async function editarRegistro(id){
+
+    const placa=prompt("Placa:");
+    if(placa==null)return;
+
+    const propietario=prompt("Propietario:");
+    if(propietario==null)return;
+
+    const nro_certificado=prompt("N° Certificado:");
+    if(nro_certificado==null)return;
+
+    const categoria=prompt("Categoría:");
+    if(categoria==null)return;
+
+    const marca=prompt("Marca:");
+    if(marca==null)return;
+
+    const modelo=prompt("Modelo:");
+    if(modelo==null)return;
+
+    const color=prompt("Color:");
+    if(color==null)return;
+
+    const motor=prompt("Motor:");
+    if(motor==null)return;
+
+    const serie=prompt("Serie:");
+    if(serie==null)return;
+
+    const anio=prompt("Año:");
+    if(anio==null)return;
+
+    const r=await fetch("/api/importar/lunas/"+id,{
+
+        method:"PUT",
+
+        headers:{
+            "Content-Type":"application/json",
+            Authorization:"Bearer "+token
+        },
+
+        body:JSON.stringify({
+            placa,
+            propietario,
+            nro_certificado,
+            categoria,
+            marca,
+            modelo,
+            color,
+            motor,
+            serie,
+            anio
+        })
+
+    });
+
+    const j=await r.json();
+
+    alert(j.mensaje);
+
+    cargarLunas();
+
+}
+
+async function eliminarRegistro(id){
+
+    if(!confirm("¿Desea eliminar este registro?")) return;
+
+    const r=await fetch("/api/importar/lunas/"+id,{
+
+        method:"DELETE",
+
+        headers
+
+    });
+
+    const j=await r.json();
+
+    alert(j.mensaje);
+
+    cargarLunas();
+
+}
+
+cargarLunas();
+
+</script>
+<!-- MODAL EDITAR -->
+</body>
+
+</html>

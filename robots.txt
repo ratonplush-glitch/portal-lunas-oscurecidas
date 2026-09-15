@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+Disallow: /panel
+Disallow: /lunas
+Disallow: /index.html
+
+Sitemap: https://consultalunas.com/sitemap.xml
