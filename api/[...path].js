@@ -1,3 +1,9 @@
-const app = require("../server");
-
-module.exports = app;
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ]
+}
