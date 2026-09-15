@@ -195,17 +195,28 @@ function extraerCampo(texto, campo) {
     .map(escapar)
     .join('|');
 
+  /*
+   * IMPORTANTE:
+   * El dato termina cuando:
+   * 1. aparece otro campo, o
+   * 2. termina la línea.
+   *
+   * Esto evita que COLOR se lleve toda la sección
+   * de OBSERVACIONES del certificado.
+   */
   const regex = new RegExp(
     campoEscapado +
-    '\\s*:\\s*([\\s\\S]*?)(?=\\s+(?:' +
+    '\\s*:\\s*([^\\r\\n]*?)(?=\\s+(?:' +
     siguientes +
-    ')\\s*:|\\s*$)',
+    ')\\s*:|\\r?$)',
     'i'
   );
 
   const m = texto.match(regex);
 
-  return m ? limpiar(m[1]) : '';
+  return m
+    ? limpiar(m[1])
+    : '';
 }
 
 function extraerPlaca(texto) {
