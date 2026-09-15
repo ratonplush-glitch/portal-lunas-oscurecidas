@@ -555,9 +555,7 @@ return;
 
 try{
 const respuesta = await fetch(
-
-"/api/importar/consulta/" + tipo + "/" + valor
-
+  "/api/importar/consulta/" + tipo + "/" + valor
 );
 
 const datos = await respuesta.json();
