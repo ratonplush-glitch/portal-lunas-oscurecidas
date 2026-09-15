@@ -95,13 +95,93 @@ function dato(texto, patron) {
 async function parsePdf(buffer) {
   const resultado = await pdf(buffer);
   const texto = resultado.text.replace(/\r/g, '');
-  const placa = dato(texto, /Placa\s*:\s*([A-Z0-9]+)/i).toUpperCase();
-  const nro_certificado = dato(texto, /NRO\s*:\s*([A-Z0-9]+)/i).toUpperCase();
 
-  // Handles the live PNP PDF layout where the applicant block may include labels.
-  let propietario = dato(texto, /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})\n/i);
+  function extraer(campo, siguienteCampos = []) {
+    const campos = [campo, ...siguienteCampos]
+      .map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'))
+      .join('|');
+
+    const regex = new RegExp(
+      `${campo}\\s*:\\s*([\\s\\S]*?)(?=\\s+(?:${campos})\\s*:|\\n|$)`,
+      'i'
+    );
+
+    const m = texto.match(regex);
+    return m ? m[1].replace(/\s+/g, ' ').trim() : '';
+  }
+
+  const placa = extraer('Placa').toUpperCase();
+  const nro_certificado = extraer('NRO').toUpperCase();
+
+  // PROPIETARIO
+  let propietario = dato(
+    texto,
+    /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})\n/i
+  );
+
   propietario = propietario.replace(/\s{2,}/g, ' ').trim();
-  if (!propietario) propietario = dato(texto, /PROPIETARIO\s*:\s*([^\n]+)/i);
+
+  if (!propietario) {
+    propietario = dato(
+      texto,
+      /PROPIETARIO\s*:\s*([^\n]+)/i
+    );
+  }
+
+  // DATOS DEL VEHÍCULO
+  const categoria = extraer('Categoría', [
+    'Marca',
+    'Modelo',
+    'Color',
+    'Motor',
+    'Serie',
+    'Año'
+  ]);
+
+  const marca = extraer('Marca', [
+    'Modelo',
+    'Color',
+    'Motor',
+    'Serie',
+    'Año'
+  ]);
+
+  const modelo = extraer('Modelo', [
+    'Color',
+    'Motor',
+    'Serie',
+    'Año'
+  ]);
+
+  const color = extraer('Color', [
+    'Motor',
+    'Serie',
+    'Año'
+  ]);
+
+  const motor = extraer('Motor', [
+    'Serie',
+    'Año'
+  ]);
+
+  const serie = extraer('Serie', [
+    'Año'
+  ]);
+
+  const anio = dato(
+    texto,
+    /Año\s*:\s*([0-9]{4})/i
+  );
+
+  // FECHA DE EMISIÓN
+  let fecha_emision = dato(
+    texto,
+    /Fecha\s*(?:de\s*)?Emisión\s*:\s*([0-9]{1,2}\/[0-9]{1,2}\/[0-9]{4})/i
+  );
+
+  if (!fecha_emision) {
+    fecha_emision = new Date();
+  }
 
   return {
     placa,
@@ -109,14 +189,14 @@ async function parsePdf(buffer) {
     fecha_resolucion: new Date(),
     nro_certificado,
     propietario,
-    categoria: dato(texto, /Categoría\s*:\s*([^\n]+)/i),
-    marca: dato(texto, /Marca\s*:\s*([^\n]+)/i),
-    modelo: dato(texto, /Modelo\s*:\s*([^\n]+)/i),
-    color: dato(texto, /Color\s*:\s*([^\n]+)/i),
-    motor: dato(texto, /Motor\s*:\s*([^\n]+)/i),
-    serie: dato(texto, /Serie\s*:\s*([^\n]+)/i),
-    anio: dato(texto, /Año\s*:\s*([0-9]{4})/i),
-    fecha_emision: new Date(),
+    categoria,
+    marca,
+    modelo,
+    color,
+    motor,
+    serie,
+    anio,
+    fecha_emision,
     video: '',
     descripcion: ''
   };
