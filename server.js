@@ -19,10 +19,11 @@ app.set('trust proxy', 1);
 app.use(cors());
 
 app.use(express.json({
-  limit: '2mb'
+    limit: '2mb'
 }));
 
 const PUBLIC = __dirname;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -31,25 +32,26 @@ const PUBLIC = __dirname;
 */
 
 app.use(
-  '/assets',
-  express.static(
-    path.join(__dirname, 'assets')
-  )
+    '/assets',
+    express.static(
+        path.join(__dirname, 'assets')
+    )
 );
 
 app.use(
-  '/styles',
-  express.static(
-    path.join(__dirname, 'styles')
-  )
+    '/styles',
+    express.static(
+        path.join(__dirname, 'styles')
+    )
 );
 
 app.use(
-  '/services',
-  express.static(
-    path.join(__dirname, 'services')
-  )
+    '/services',
+    express.static(
+        path.join(__dirname, 'services')
+    )
 );
+
 
 /*
 |--------------------------------------------------------------------------
@@ -58,62 +60,63 @@ app.use(
 */
 
 app.get('/', (req, res) => {
-  res.redirect('/consulta');
+    res.redirect('/consulta');
 });
 
 app.get('/consulta', (req, res) => {
-  res.sendFile(
-    path.join(PUBLIC, 'consulta.html')
-  );
+    res.sendFile(
+        path.join(PUBLIC, 'consulta.html')
+    );
 });
 
 app.get('/panel', (req, res) => {
-  res.sendFile(
-    path.join(PUBLIC, 'panel.html')
-  );
+    res.sendFile(
+        path.join(PUBLIC, 'panel.html')
+    );
 });
 
 app.get('/lunas', (req, res) => {
-  res.sendFile(
-    path.join(PUBLIC, 'lunas.html')
-  );
+    res.sendFile(
+        path.join(PUBLIC, 'lunas.html')
+    );
 });
 
 app.get(
-  '/permiso-lunas-polarizadas.html',
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        PUBLIC,
-        'permiso-lunas-polarizadas.html'
-      )
-    );
-  }
+    '/permiso-lunas-polarizadas.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                PUBLIC,
+                'permiso-lunas-polarizadas.html'
+            )
+        );
+    }
 );
 
 app.get(
-  '/permiso-lunas-polarizadas-peru.html',
-  (req, res) => {
-    res.sendFile(
-      path.join(
-        PUBLIC,
-        'permiso-lunas-polarizadas-peru.html'
-      )
-    );
-  }
+    '/permiso-lunas-polarizadas-peru.html',
+    (req, res) => {
+        res.sendFile(
+            path.join(
+                PUBLIC,
+                'permiso-lunas-polarizadas-peru.html'
+            )
+        );
+    }
 );
 
 app.get('/sitemap.xml', (req, res) => {
-  res.sendFile(
-    path.join(PUBLIC, 'sitemap.xml')
-  );
+    res.sendFile(
+        path.join(PUBLIC, 'sitemap.xml')
+    );
 });
 
 app.get('/robots.txt', (req, res) => {
-  res.sendFile(
-    path.join(PUBLIC, 'robots.txt')
-  );
+    res.sendFile(
+        path.join(PUBLIC, 'robots.txt')
+    );
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -122,12 +125,13 @@ app.get('/robots.txt', (req, res) => {
 */
 
 const upload = multer({
-  storage: multer.memoryStorage(),
+    storage: multer.memoryStorage(),
 
-  limits: {
-    fileSize: 20 * 1024 * 1024
-  }
+    limits: {
+        fileSize: 20 * 1024 * 1024
+    }
 });
+
 
 /*
 |--------------------------------------------------------------------------
@@ -140,59 +144,60 @@ let mongoDb;
 
 async function db() {
 
-  if (mongoDb) {
-    return mongoDb;
-  }
-
-  if (!process.env.MONGODB_URI) {
-    throw new Error(
-      'Falta configurar MONGODB_URI en Vercel.'
-    );
-  }
-
-  mongoClient = new MongoClient(
-    process.env.MONGODB_URI,
-    {
-      maxPoolSize: 10,
-      serverSelectionTimeoutMS: 8000
+    if (mongoDb) {
+        return mongoDb;
     }
-  );
 
-  await mongoClient.connect();
+    if (!process.env.MONGODB_URI) {
+        throw new Error(
+            'Falta configurar MONGODB_URI en Vercel.'
+        );
+    }
 
-  mongoDb = mongoClient.db(
-    process.env.MONGODB_DB ||
-    'portal_lunas'
-  );
-
-  await mongoDb
-    .collection('lunas')
-    .createIndex(
-      { placa: 1 },
-      {
-        unique: true,
-        sparse: true
-      }
+    mongoClient = new MongoClient(
+        process.env.MONGODB_URI,
+        {
+            maxPoolSize: 10,
+            serverSelectionTimeoutMS: 8000
+        }
     );
 
-  await mongoDb
-    .collection('lunas')
-    .createIndex({
-      nro_certificado: 1
-    });
+    await mongoClient.connect();
 
-  await mongoDb
-    .collection('usuarios')
-    .createIndex(
-      { usuario: 1 },
-      {
-        unique: true,
-        sparse: true
-      }
+    mongoDb = mongoClient.db(
+        process.env.MONGODB_DB ||
+        'portal_lunas'
     );
 
-  return mongoDb;
+    await mongoDb
+        .collection('lunas')
+        .createIndex(
+            { placa: 1 },
+            {
+                unique: true,
+                sparse: true
+            }
+        );
+
+    await mongoDb
+        .collection('lunas')
+        .createIndex({
+            nro_certificado: 1
+        });
+
+    await mongoDb
+        .collection('usuarios')
+        .createIndex(
+            { usuario: 1 },
+            {
+                unique: true,
+                sparse: true
+            }
+        );
+
+    return mongoDb;
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -202,20 +207,21 @@ async function db() {
 
 function tokenFor(user) {
 
-  return jwt.sign(
-    {
-      id: user.id,
-      usuario: user.usuario
-    },
+    return jwt.sign(
+        {
+            id: user.id,
+            usuario: user.usuario
+        },
 
-    process.env.JWT_SECRET ||
-    'PORTAL_LUNAS_2026',
+        process.env.JWT_SECRET ||
+        'PORTAL_LUNAS_2026',
 
-    {
-      expiresIn: '8h'
-    }
-  );
+        {
+            expiresIn: '8h'
+        }
+    );
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -225,40 +231,41 @@ function tokenFor(user) {
 
 function auth(req, res, next) {
 
-  const header =
-    req.headers.authorization || '';
+    const header =
+        req.headers.authorization || '';
 
-  const token =
-    header.startsWith('Bearer ')
-      ? header.slice(7)
-      : '';
+    const token =
+        header.startsWith('Bearer ')
+            ? header.slice(7)
+            : '';
 
-  if (!token) {
+    if (!token) {
 
-    return res.status(401).json({
-      ok: false,
-      mensaje: 'Token no proporcionado'
-    });
-  }
+        return res.status(401).json({
+            ok: false,
+            mensaje: 'Token no proporcionado'
+        });
+    }
 
-  try {
+    try {
 
-    req.usuario = jwt.verify(
-      token,
-      process.env.JWT_SECRET ||
-      'PORTAL_LUNAS_2026'
-    );
+        req.usuario = jwt.verify(
+            token,
+            process.env.JWT_SECRET ||
+            'PORTAL_LUNAS_2026'
+        );
 
-    next();
+        next();
 
-  } catch {
+    } catch {
 
-    return res.status(403).json({
-      ok: false,
-      mensaje: 'Token inválido'
-    });
-  }
+        return res.status(403).json({
+            ok: false,
+            mensaje: 'Token inválido'
+        });
+    }
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -268,59 +275,60 @@ function auth(req, res, next) {
 
 async function ensureAdmin() {
 
-  const user =
-    process.env.ADMIN_USER;
+    const user =
+        process.env.ADMIN_USER;
 
-  const password =
-    process.env.ADMIN_PASSWORD;
+    const password =
+        process.env.ADMIN_PASSWORD;
 
-  if (!user || !password) {
-    return;
-  }
+    if (!user || !password) {
+        return;
+    }
 
-  const database =
-    await db();
+    const database =
+        await db();
 
-  const exists =
-    await database
-      .collection('usuarios')
-      .findOne({
-        usuario: user
-      });
+    const exists =
+        await database
+            .collection('usuarios')
+            .findOne({
+                usuario: user
+            });
 
-  if (!exists) {
+    if (!exists) {
 
-    await database
-      .collection('usuarios')
-      .insertOne({
+        await database
+            .collection('usuarios')
+            .insertOne({
 
-        id: crypto.randomUUID(),
+                id: crypto.randomUUID(),
 
-        usuario: user,
+                usuario: user,
 
-        nombre:
-          process.env.ADMIN_NAME ||
-          'Administrador',
+                nombre:
+                    process.env.ADMIN_NAME ||
+                    'Administrador',
 
-        correo:
-          process.env.ADMIN_EMAIL ||
-          '',
+                correo:
+                    process.env.ADMIN_EMAIL ||
+                    '',
 
-        rol: 'admin',
+                rol: 'admin',
 
-        estado: 1,
+                estado: 1,
 
-        password:
-          await bcrypt.hash(
-            password,
-            10
-          ),
+                password:
+                    await bcrypt.hash(
+                        password,
+                        10
+                    ),
 
-        createdAt:
-          new Date()
-      });
-  }
+                createdAt:
+                    new Date()
+            });
+    }
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -330,28 +338,29 @@ async function ensureAdmin() {
 
 function dato(texto, patron) {
 
-  const m =
-    texto.match(patron);
+    const m =
+        texto.match(patron);
 
-  return m
-    ? m[1].trim()
-    : '';
+    return m
+        ? m[1].trim()
+        : '';
 }
 
 function limpiar(valor) {
 
-  return String(valor || '')
-    .replace(/\s+/g, ' ')
-    .trim();
+    return String(valor || '')
+        .replace(/\s+/g, ' ')
+        .trim();
 }
 
 function normalizarPlaca(valor) {
 
-  return String(valor || '')
-    .toUpperCase()
-    .replace(/[^A-Z0-9]/g, '')
-    .trim();
+    return String(valor || '')
+        .toUpperCase()
+        .replace(/[^A-Z0-9]/g, '')
+        .trim();
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -361,105 +370,89 @@ function normalizarPlaca(valor) {
 
 function escaparRegex(valor) {
 
-  return String(valor)
-    .replace(
-      /[.*+?^${}()|[\]\\]/g,
-      '\\$&'
-    );
+    return String(valor)
+        .replace(
+            /[.*+?^${}()|[\]\\]/g,
+            '\\$&'
+        );
 }
+
 
 /*
 |--------------------------------------------------------------------------
 | EXTRAER CAMPOS DEL PDF
 |--------------------------------------------------------------------------
-|
-| ESTA ES LA PARTE CORREGIDA.
-|
-| El problema anterior era que el texto del PDF podía colocar:
-|
-| COLOR: NEGRO MICA
-| OBSERVACION: LUNAS OSCURAS...
-|
-| y el extractor terminaba tomando todo el bloque.
-|
-| Ahora cada campo termina cuando aparece:
-|
-| - otro campo del vehículo
-| - OBSERVACION
-| - RESPONSABLE
-| - cualquier sección posterior
-|
-|--------------------------------------------------------------------------
 */
 
 function extraerCampo(texto, campo) {
 
-  const campos = [
-    'Placa',
-    'NRO',
-    'Nro',
-    'NRO Certificado',
-    'Nro Certificado',
-    'Categoría',
-    'Categoria',
-    'Carrocería',
-    'Carroceria',
-    'Marca',
-    'Modelo',
-    'Color',
-    'Motor',
-    'Serie',
-    'Año',
-    'Fecha de Emisión',
-    'Fecha Emisión',
-    'Fecha de emision',
-    'Fecha emision'
-  ];
+    const campos = [
+        'Placa',
+        'NRO',
+        'Nro',
+        'NRO Certificado',
+        'Nro Certificado',
+        'Categoría',
+        'Categoria',
+        'Carrocería',
+        'Carroceria',
+        'Marca',
+        'Modelo',
+        'Color',
+        'Motor',
+        'Serie',
+        'Año',
+        'Fecha de Emisión',
+        'Fecha Emisión',
+        'Fecha de emision',
+        'Fecha emision'
+    ];
 
-  const campoEscapado =
-    escaparRegex(campo);
+    const campoEscapado =
+        escaparRegex(campo);
 
-  const siguientes =
-    campos
-      .filter(
-        c =>
-          c.toLowerCase() !==
-          campo.toLowerCase()
-      )
-      .map(escaparRegex)
-      .join('|');
+    const siguientes =
+        campos
+            .filter(
+                c =>
+                    c.toLowerCase() !==
+                    campo.toLowerCase()
+            )
+            .map(escaparRegex)
+            .join('|');
 
-  const regex =
-    new RegExp(
-      campoEscapado +
-      '\\s*:\\s*' +
-      '([\\s\\S]*?)' +
-      '(?=' +
-        '\\s+(?:' +
-          siguientes +
-        ')\\s*:' +
-        '|\\s+OBSERVACI[ÓO]N\\b' +
-        '|\\s+RESPONSABLE\\b' +
-        '|\\s+DATOS\\s+DEL\\s+VEH[IÍ]CULO\\b' +
-        '|\\s+DATOS\\s+DEL\\s+SOLICITANTE\\b' +
-        '|$)',
-      'i'
+    const regex =
+        new RegExp(
+            campoEscapado +
+            '\\s*:\\s*' +
+            '([\\s\\S]*?)' +
+            '(?=' +
+                '\\s+(?:' +
+                    siguientes +
+                ')\\s*:' +
+                '|\\s+OBSERVACI[ÓO]N\\b' +
+                '|\\s+RESPONSABLE\\b' +
+                '|\\s+DATOS\\s+DEL\\s+VEH[IÍ]CULO\\b' +
+                '|\\s+DATOS\\s+DEL\\s+SOLICITANTE\\b' +
+                '|$)',
+            'i'
+        );
+
+    const m =
+        texto.match(regex);
+
+    if (!m) {
+        return '';
+    }
+
+    return limpiar(
+        m[1]
+            .replace(/[-_=]{2,}/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
     );
-
-  const m =
-    texto.match(regex);
-
-  if (!m) {
-    return '';
-  }
-
-  return limpiar(
-    m[1]
-      .replace(/[-_=]{2,}/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim()
-  );
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -469,51 +462,40 @@ function extraerCampo(texto, campo) {
 
 function extraerPlaca(texto) {
 
-  /*
-   * Primero buscamos la forma normal:
-   *
-   * Placa: 12345W
-   */
-
-  let m =
-    texto.match(
-      /Placa\s*:\s*([A-Z0-9]{5,8})(?=\s|$)/i
-    );
-
-  if (m) {
-
-    return normalizarPlaca(
-      m[1]
-    );
-  }
-
-  /*
-   * Segundo intento:
-   * algunos PDF tienen espacios
-   * o saltos de línea diferentes.
-   */
-
-  m =
-    texto.match(
-      /Placa\s*:\s*([A-Z0-9][A-Z0-9\s-]{4,10})/i
-    );
-
-  if (m) {
-
-    const candidata =
-      m[1]
-        .replace(
-          /[\s-]/g,
-          ''
+    let m =
+        texto.match(
+            /Placa\s*:\s*([A-Z0-9]{5,8})(?=\s|$)/i
         );
 
-    return normalizarPlaca(
-      candidata
-    );
-  }
+    if (m) {
 
-  return '';
+        return normalizarPlaca(
+            m[1]
+        );
+    }
+
+    m =
+        texto.match(
+            /Placa\s*:\s*([A-Z0-9][A-Z0-9\s-]{4,10})/i
+        );
+
+    if (m) {
+
+        const candidata =
+            m[1]
+                .replace(
+                    /[\s-]/g,
+                    ''
+                );
+
+        return normalizarPlaca(
+            candidata
+        );
+    }
+
+    return '';
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -521,263 +503,311 @@ function extraerPlaca(texto) {
 |--------------------------------------------------------------------------
 */
 
-function limpiarPropietario(
-  valor
-) {
+function limpiarPropietario(valor) {
 
-  let propietario =
-    limpiar(valor);
+    let propietario =
+        limpiar(valor);
 
-  propietario =
-    propietario.replace(
-      /\s*DATOS\s+DEL\s+VEH[IÍ]CULO\s*:?.*$/i,
-      ''
-    );
+    propietario =
+        propietario.replace(
+            /\s*DATOS\s+DEL\s+VEH[IÍ]CULO\s*:?.*$/i,
+            ''
+        );
 
-  propietario =
-    propietario.replace(
-      /\s*DATOS\s+DEL\s+SOLICITANTE\s*:?.*$/i,
-      ''
-    );
+    propietario =
+        propietario.replace(
+            /\s*DATOS\s+DEL\s+SOLICITANTE\s*:?.*$/i,
+            ''
+        );
 
-  propietario =
-    propietario.replace(
-      /\s*PLACA\s*:?.*$/i,
-      ''
-    );
+    propietario =
+        propietario.replace(
+            /\s*PLACA\s*:?.*$/i,
+            ''
+        );
 
-  propietario =
-    propietario
-      .replace(/\s{2,}/g, ' ')
-      .trim();
+    propietario =
+        propietario
+            .replace(/\s{2,}/g, ' ')
+            .trim();
 
-  return propietario;
+    return propietario;
 }
-
 /*
 |--------------------------------------------------------------------------
 | PARSER PRINCIPAL DEL PDF
 |--------------------------------------------------------------------------
 */
 
-async function parsePdf(
-  buffer
-) {
+async function parsePdf(buffer) {
 
-  const resultado =
-    await pdf(buffer);
+    const resultado =
+        await pdf(buffer);
 
-  const texto =
-    resultado.text
-      .replace(/\r/g, '')
-      .replace(/\u00a0/g, ' ');
+    const texto =
+        resultado.text
+            .replace(/\r/g, '')
+            .replace(/\u00a0/g, ' ');
 
-  /*
-   * PLACA
-   */
 
-  const placa =
-    extraerPlaca(texto);
+/*
+|--------------------------------------------------------------------------
+| PLACA
+|--------------------------------------------------------------------------
+*/
 
-  /*
-   * NÚMERO DE CERTIFICADO
-   */
+    const placa =
+        extraerPlaca(texto);
 
-  let nro_certificado =
-    extraerCampo(
-      texto,
-      'NRO'
-    ).toUpperCase();
 
-  /*
-   * Si el PDF devuelve texto
-   * adicional, nos quedamos
-   * solamente con el código.
-   */
+/*
+|--------------------------------------------------------------------------
+| NÚMERO DE CERTIFICADO
+|--------------------------------------------------------------------------
+*/
 
-  const certificadoMatch =
-    nro_certificado.match(
-      /[A-Z0-9]{5,20}/
-    );
+    let nro_certificado =
+        extraerCampo(
+            texto,
+            'NRO'
+        ).toUpperCase();
 
-  nro_certificado =
-    certificadoMatch
-      ? certificadoMatch[0]
-      : '';
+    const certificadoMatch =
+        nro_certificado.match(
+            /[A-Z0-9]{5,20}/
+        );
 
-  /*
-   * PROPIETARIO
-   */
+    nro_certificado =
+        certificadoMatch
+            ? certificadoMatch[0]
+            : '';
 
-  let propietario =
-    dato(
-      texto,
-      /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})(?=\s*\n|$)/i
-    );
 
-  propietario =
-    limpiarPropietario(
-      propietario
-    );
+/*
+|--------------------------------------------------------------------------
+| PROPIETARIO
+|--------------------------------------------------------------------------
+*/
 
-  /*
-   * Segundo método para propietario.
-   */
-
-  if (!propietario) {
+    let propietario =
+        dato(
+            texto,
+            /DATOS DEL SOLICITANTE[\s\S]*?\n\s*([A-ZÁÉÍÓÚÑ][A-ZÁÉÍÓÚÑ .,'-]{3,})(?=\s*\n|$)/i
+        );
 
     propietario =
-      limpiarPropietario(
+        limpiarPropietario(
+            propietario
+        );
+
+    if (!propietario) {
+
+        propietario =
+            limpiarPropietario(
+                dato(
+                    texto,
+                    /PROPIETARIO\s*:\s*([^\n]+)/i
+                )
+            );
+    }
+
+
+/*
+|--------------------------------------------------------------------------
+| DATOS DEL VEHÍCULO
+|--------------------------------------------------------------------------
+*/
+
+    let categoria =
+        extraerCampo(
+            texto,
+            'Categoría'
+        );
+
+    if (!categoria) {
+
+        categoria =
+            extraerCampo(
+                texto,
+                'Categoria'
+            );
+    }
+
+    const marca =
+        extraerCampo(
+            texto,
+            'Marca'
+        );
+
+    const modelo =
+        extraerCampo(
+            texto,
+            'Modelo'
+        );
+
+    const color =
+        extraerCampo(
+            texto,
+            'Color'
+        );
+
+    const motor =
+        extraerCampo(
+            texto,
+            'Motor'
+        );
+
+    const serie =
+        extraerCampo(
+            texto,
+            'Serie'
+        );
+
+
+/*
+|--------------------------------------------------------------------------
+| AÑO
+|--------------------------------------------------------------------------
+*/
+
+    let anio =
         dato(
-          texto,
-          /PROPIETARIO\s*:\s*([^\n]+)/i
-        )
-      );
-  }
+            texto,
+            /Año\s*:\s*([0-9]{4})/i
+        );
 
-  /*
-   * DATOS DEL VEHÍCULO
-   */
 
-  let categoria =
-    extraerCampo(
-      texto,
-      'Categoría'
-    );
+/*
+|--------------------------------------------------------------------------
+| FECHA DE EMISIÓN
+|--------------------------------------------------------------------------
+|
+| IMPORTANTE:
+|
+| La fecha sale EXCLUSIVAMENTE del PDF.
+|
+| Ya NO usamos new Date() como sustituto.
+|
+|--------------------------------------------------------------------------
+*/
 
-  if (!categoria) {
+    let fecha_emision =
+        dato(
+            texto,
+            /Fecha\s*(?:de\s*)?Emisión\s*:\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
+        );
 
-    categoria =
-      extraerCampo(
-        texto,
-        'Categoria'
-      );
-  }
 
-  /*
-   * MARCA
-   */
+/*
+|--------------------------------------------------------------------------
+| SEGUNDO MÉTODO PARA FECHA
+|--------------------------------------------------------------------------
+|
+| Algunos PDF pueden separar "Fecha" y "Emisión"
+| de manera diferente.
+|
+|--------------------------------------------------------------------------
+*/
 
-  const marca =
-    extraerCampo(
-      texto,
-      'Marca'
-    );
+    if (!fecha_emision) {
 
-  /*
-   * MODELO
-   */
+        fecha_emision =
+            dato(
+                texto,
+                /Fecha\s+Emisión\s*:\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
+            );
+    }
 
-  const modelo =
-    extraerCampo(
-      texto,
-      'Modelo'
-    );
 
-  /*
-   * COLOR
-   */
+/*
+|--------------------------------------------------------------------------
+| SI NO HAY FECHA EN EL PDF
+|--------------------------------------------------------------------------
+|
+| NO inventamos la fecha actual.
+|
+|--------------------------------------------------------------------------
+*/
 
-  const color =
-    extraerCampo(
-      texto,
-      'Color'
-    );
+    if (!fecha_emision) {
 
-  /*
-   * MOTOR
-   */
+        throw new Error(
+            'No se encontró la Fecha de Emisión en el PDF.'
+        );
+    }
 
-  const motor =
-    extraerCampo(
-      texto,
-      'Motor'
-    );
 
-  /*
-   * SERIE
-   */
+/*
+|--------------------------------------------------------------------------
+| NORMALIZAR FECHA
+|--------------------------------------------------------------------------
+*/
 
-  const serie =
-    extraerCampo(
-      texto,
-      'Serie'
-    );
+    const fechaMatch =
+        fecha_emision.match(
+            /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/
+        );
 
-  /*
-   * AÑO
-   *
-   * Solamente cuatro números.
-   */
+    if (fechaMatch) {
 
-  let anio =
-    dato(
-      texto,
-      /Año\s*:\s*([0-9]{4})/i
-    );
+        const dia =
+            fechaMatch[1].padStart(2, '0');
 
-  /*
-   * FECHA DE EMISIÓN
-   */
+        const mes =
+            fechaMatch[2].padStart(2, '0');
 
-  let fecha_emision =
-    dato(
-      texto,
-      /Fecha\s*(?:de\s*)?Emisión\s*:\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
-    );
+        const anioFecha =
+            fechaMatch[3];
 
-  /*
-   * Si no encuentra fecha,
-   * utiliza la fecha actual.
-   */
+        fecha_emision =
+            `${dia}/${mes}/${anioFecha}`;
+    }
 
-  if (!fecha_emision) {
 
-    fecha_emision =
-      new Date();
-  }
+/*
+|--------------------------------------------------------------------------
+| RESULTADO FINAL
+|--------------------------------------------------------------------------
+*/
 
-  /*
-   * RESULTADO FINAL
-   */
+    return {
 
-  return {
+        placa,
 
-    placa,
+        numero_resolucion:
+            '',
 
-    numero_resolucion:
-      '',
+        fecha_resolucion:
+            '',
 
-    fecha_resolucion:
-      new Date(),
+        nro_certificado,
 
-    nro_certificado,
+        propietario,
 
-    propietario,
+        categoria,
 
-    categoria,
+        marca,
 
-    marca,
+        modelo,
 
-    modelo,
+        color,
 
-    color,
+        motor,
 
-    motor,
+        serie,
 
-    serie,
+        anio,
 
-    anio,
+        fecha_emision,
 
-    fecha_emision,
+        video:
+            '',
 
-    video:
-      '',
-
-    descripcion:
-      ''
-  };
+        descripcion:
+            ''
+    };
 }
+
 
 /*
 |--------------------------------------------------------------------------
@@ -786,82 +816,83 @@ async function parsePdf(
 */
 
 app.post(
-  '/api/login',
-  async (req, res) => {
+    '/api/login',
+    async (req, res) => {
 
-    try {
+        try {
 
-      await ensureAdmin();
+            await ensureAdmin();
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const {
-        usuario,
-        password
-      } = req.body || {};
+            const {
+                usuario,
+                password
+            } = req.body || {};
 
-      const user =
-        await database
-          .collection('usuarios')
-          .findOne({
-            usuario
-          });
+            const user =
+                await database
+                    .collection('usuarios')
+                    .findOne({
+                        usuario
+                    });
 
-      if (
-        !user ||
-        !(
-          await bcrypt.compare(
-            password || '',
-            user.password
-          )
-        )
-      ) {
+            if (
+                !user ||
+                !(
+                    await bcrypt.compare(
+                        password || '',
+                        user.password
+                    )
+                )
+            ) {
 
-        return res.json({
+                return res.json({
 
-          ok: false,
+                    ok: false,
 
-          mensaje:
-            'Usuario o contraseña incorrectos'
-        });
-      }
+                    mensaje:
+                        'Usuario o contraseña incorrectos'
+                });
+            }
 
-      return res.json({
+            return res.json({
 
-        ok: true,
+                ok: true,
 
-        mensaje:
-          'Bienvenido',
+                mensaje:
+                    'Bienvenido',
 
-        token:
-          tokenFor(user),
+                token:
+                    tokenFor(user),
 
-        usuario: {
+                usuario: {
 
-          id:
-            user.id,
+                    id:
+                        user.id,
 
-          usuario:
-            user.usuario,
+                    usuario:
+                        user.usuario,
 
-          nombre:
-            user.nombre
+                    nombre:
+                        user.nombre
+                }
+            });
+
+        } catch (e) {
+
+            return res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
         }
-      });
-
-    } catch (e) {
-
-      return res.status(500).json({
-
-        ok: false,
-
-        mensaje:
-          e.message
-      });
     }
-  }
 );
+
 
 /*
 |--------------------------------------------------------------------------
@@ -870,165 +901,174 @@ app.post(
 */
 
 app.get(
-  '/api/importar/consulta/:tipo/:valor',
-  async (req, res) => {
+    '/api/importar/consulta/:tipo/:valor',
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const tipo =
-        String(
-          req.params.tipo || ''
-        ).toLowerCase();
+            const tipo =
+                String(
+                    req.params.tipo || ''
+                ).toLowerCase();
 
-      const valor =
-        String(
-          req.params.valor || ''
-        ).toUpperCase()
-        .trim();
+            const valor =
+                String(
+                    req.params.valor || ''
+                )
+                    .toUpperCase()
+                    .trim();
 
-      let registro = null;
+            let registro = null;
 
-      /*
-       * BUSCAR POR PLACA
-       */
 
-      if (tipo === 'placa') {
+/*
+|--------------------------------------------------------------------------
+| BUSCAR POR PLACA
+|--------------------------------------------------------------------------
+*/
 
-        const placaBuscada =
-          normalizarPlaca(valor);
+            if (tipo === 'placa') {
 
-        /*
-         * Primero buscamos exactamente
-         * la placa limpia.
-         */
+                const placaBuscada =
+                    normalizarPlaca(valor);
 
-        registro =
-          await database
-            .collection('lunas')
-            .findOne(
-              {
-                placa:
-                  placaBuscada
-              },
-              {
-                projection: {
-                  _id: 0
+                registro =
+                    await database
+                        .collection('lunas')
+                        .findOne(
+                            {
+                                placa:
+                                    placaBuscada
+                            },
+                            {
+                                projection: {
+                                    _id: 0
+                                }
+                            }
+                        );
+
+
+/*
+|--------------------------------------------------------------------------
+| COMPATIBILIDAD CON REGISTROS ANTIGUOS
+|--------------------------------------------------------------------------
+*/
+
+                if (
+                    !registro &&
+                    placaBuscada
+                ) {
+
+                    const escapedPlaca =
+                        placaBuscada.replace(
+                            /[.*+?^${}()|[\]\\]/g,
+                            '\\$&'
+                        );
+
+                    registro =
+                        await database
+                            .collection('lunas')
+                            .findOne(
+                                {
+                                    placa: {
+                                        $regex:
+                                            `^${escapedPlaca}(?:\\s|\\(|$)`,
+
+                                        $options:
+                                            'i'
+                                    }
+                                },
+                                {
+                                    projection: {
+                                        _id: 0
+                                    }
+                                }
+                            );
                 }
-              }
-            );
 
-        /*
-         * Compatibilidad con registros
-         * antiguos que pudieran tener
-         * texto adicional en la placa.
-         */
 
-        if (
-          !registro &&
-          placaBuscada
-        ) {
+/*
+|--------------------------------------------------------------------------
+| BUSCAR POR CERTIFICADO
+|--------------------------------------------------------------------------
+*/
 
-          const escapedPlaca =
-            placaBuscada.replace(
-              /[.*+?^${}()|[\]\\]/g,
-              '\\$&'
-            );
+            } else if (
+                tipo === 'certificado'
+            ) {
 
-          registro =
-            await database
-              .collection('lunas')
-              .findOne(
-                {
-                  placa: {
-                    $regex:
-                      `^${escapedPlaca}(?:\\s|\\(|$)`,
+                registro =
+                    await database
+                        .collection('lunas')
+                        .findOne(
+                            {
+                                nro_certificado:
+                                    valor
+                            },
+                            {
+                                projection: {
+                                    _id: 0
+                                }
+                            }
+                        );
 
-                    $options:
-                      'i'
-                  }
-                },
-                {
-                  projection: {
-                    _id: 0
-                  }
-                }
-              );
+            } else {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'Tipo de búsqueda no válido.'
+                });
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| NO ENCONTRADO
+|--------------------------------------------------------------------------
+*/
+
+            if (!registro) {
+
+                return res.json({
+
+                    ok: false,
+
+                    mensaje:
+                        'No se encontró ningún registro.'
+                });
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| DEVOLVER REGISTRO
+|--------------------------------------------------------------------------
+*/
+
+            return res.json({
+
+                ok: true,
+
+                registro
+            });
+
+        } catch (e) {
+
+            return res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
         }
-
-      /*
-       * BUSCAR POR CERTIFICADO
-       */
-
-      } else if (
-        tipo === 'certificado'
-      ) {
-
-        registro =
-          await database
-            .collection('lunas')
-            .findOne(
-              {
-                nro_certificado:
-                  valor
-              },
-              {
-                projection: {
-                  _id: 0
-                }
-              }
-            );
-
-      } else {
-
-        return res.json({
-
-          ok: false,
-
-          mensaje:
-            'Tipo de búsqueda no válido.'
-        });
-      }
-
-      /*
-       * NO ENCONTRADO
-       */
-
-      if (!registro) {
-
-        return res.json({
-
-          ok: false,
-
-          mensaje:
-            'No se encontró ningún registro.'
-        });
-      }
-
-      /*
-       * DEVOLVER REGISTRO
-       */
-
-      return res.json({
-
-        ok: true,
-
-        registro
-      });
-
-    } catch (e) {
-
-      return res.status(500).json({
-
-        ok: false,
-
-        mensaje:
-          e.message
-      });
     }
-  }
 );
 
 
@@ -1039,47 +1079,45 @@ app.get(
 */
 
 app.get(
-  '/api/importar/lunas',
-  auth,
-  async (req, res) => {
+    '/api/importar/lunas',
+    auth,
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const rows =
-        await database
-          .collection('lunas')
-          .find(
-            {},
-            {
-              projection: {
-                _id: 0
-              }
-            }
-          )
-          .sort({
-            createdAt: -1
-          })
-          .toArray();
+            const rows =
+                await database
+                    .collection('lunas')
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0
+                            }
+                        }
+                    )
+                    .sort({
+                        createdAt: -1
+                    })
+                    .toArray();
 
-      res.json(rows);
+            res.json(rows);
 
-    } catch (e) {
+        } catch (e) {
 
-      res.status(500).json({
+            res.status(500).json({
 
-        ok: false,
+                ok: false,
 
-        mensaje:
-          e.message
-      });
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
-
-
 /*
 |--------------------------------------------------------------------------
 | IMPORTAR EXCEL
@@ -1087,62 +1125,62 @@ app.get(
 */
 
 app.post(
-  '/api/importar/excel',
-  auth,
-  upload.single('archivo'),
+    '/api/importar/excel',
+    auth,
+    upload.single('archivo'),
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      if (!req.file) {
+            if (!req.file) {
 
-        return res.status(400).json({
+                return res.status(400).json({
 
-          ok: false,
+                    ok: false,
 
-          mensaje:
-            'No se recibió ningún archivo Excel'
-        });
-      }
+                    mensaje:
+                        'No se recibió ningún archivo Excel'
+                });
+            }
 
-      const libro =
-        xlsx.read(
-          req.file.buffer
-        );
+            const libro =
+                xlsx.read(
+                    req.file.buffer
+                );
 
-      const hoja =
-        libro.Sheets[
-          libro.SheetNames[0]
-        ];
+            const hoja =
+                libro.Sheets[
+                    libro.SheetNames[0]
+                ];
 
-      const datos =
-        xlsx.utils.sheet_to_json(
-          hoja
-        );
+            const datos =
+                xlsx.utils.sheet_to_json(
+                    hoja
+                );
 
-      res.json({
+            res.json({
 
-        ok: true,
+                ok: true,
 
-        total:
-          datos.length,
+                total:
+                    datos.length,
 
-        registros:
-          datos
-      });
+                registros:
+                    datos
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-      res.status(500).json({
+            res.status(500).json({
 
-        ok: false,
+                ok: false,
 
-        mensaje:
-          e.message
-      });
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1153,238 +1191,302 @@ app.post(
 */
 
 app.post(
-  '/api/importar/pdf',
-  auth,
-  upload.single('archivo'),
+    '/api/importar/pdf',
+    auth,
+    upload.single('archivo'),
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      /*
-       * Verificar archivo
-       */
 
-      if (!req.file) {
+/*
+|--------------------------------------------------------------------------
+| VERIFICAR ARCHIVO
+|--------------------------------------------------------------------------
+*/
 
-        return res.status(400).json({
+            if (!req.file) {
 
-          ok: false,
+                return res.status(400).json({
 
-          mensaje:
-            'No se recibió ningún PDF'
-        });
-      }
+                    ok: false,
 
-      /*
-       * Verificar que realmente
-       * sea un PDF.
-       */
+                    mensaje:
+                        'No se recibió ningún PDF'
+                });
+            }
 
-      const nombre =
-        String(
-          req.file.originalname || ''
-        ).toLowerCase();
 
-      const mime =
-        String(
-          req.file.mimetype || ''
-        ).toLowerCase();
+/*
+|--------------------------------------------------------------------------
+| VERIFICAR QUE REALMENTE SEA PDF
+|--------------------------------------------------------------------------
+*/
 
-      if (
-        !nombre.endsWith('.pdf') &&
-        mime !== 'application/pdf'
-      ) {
+            const nombre =
+                String(
+                    req.file.originalname || ''
+                ).toLowerCase();
 
-        return res.status(400).json({
+            const mime =
+                String(
+                    req.file.mimetype || ''
+                ).toLowerCase();
 
-          ok: false,
+            if (
+                !nombre.endsWith('.pdf') &&
+                mime !== 'application/pdf'
+            ) {
 
-          mensaje:
-            'El archivo debe ser un PDF.'
-        });
-      }
+                return res.status(400).json({
 
-      /*
-       * EXTRAER DATOS
-       */
+                    ok: false,
 
-      const registro = await parsePdf(req.file.buffer);
+                    mensaje:
+                        'El archivo debe ser un PDF.'
+                });
+            }
 
-// La fecha seleccionada desde el panel tiene prioridad
-if (req.body.fecha_emision) {
-    const partes = req.body.fecha_emision.split('-');
 
-    if (partes.length === 3) {
-        registro.fecha_emision =
-            `${partes[2]}/${partes[1]}/${partes[0]}`;
+/*
+|--------------------------------------------------------------------------
+| EXTRAER DATOS DEL PDF
+|--------------------------------------------------------------------------
+*/
+
+            const registro =
+                await parsePdf(
+                    req.file.buffer
+                );
+
+
+*
+|--------------------------------------------------------------------------
+| LA PLACA ES OBLIGATORIA
+|--------------------------------------------------------------------------
+*/
+
+            if (!registro.placa) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    mensaje:
+                        'No se pudo extraer la placa del PDF.'
+                });
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| LA FECHA DE EMISIÓN ES OBLIGATORIA
+|--------------------------------------------------------------------------
+*/
+
+            if (!registro.fecha_emision) {
+
+                return res.status(400).json({
+
+                    ok: false,
+
+                    mensaje:
+                        'No se pudo extraer la Fecha de Emisión del PDF.'
+                });
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| NOMBRE SEGURO PARA VERCEL BLOB
+|--------------------------------------------------------------------------
+*/
+
+            const safeName =
+                `${registro.placa}-${Date.now()}.pdf`
+                    .replace(
+                        /[^A-Z0-9_.-]/gi,
+                        '_'
+                    );
+
+
+/*
+|--------------------------------------------------------------------------
+| SUBIR PDF A VERCEL BLOB
+|--------------------------------------------------------------------------
+*/
+
+            const blob =
+                await put(
+                    `pdf/${safeName}`,
+
+                    req.file.buffer,
+
+                    {
+                        access:
+                            'public',
+
+                        contentType:
+                            'application/pdf',
+
+                        addRandomSuffix:
+                            false
+                    }
+                );
+
+
+/*
+|--------------------------------------------------------------------------
+| GUARDAR URL PERMANENTE DEL PDF
+|--------------------------------------------------------------------------
+*/
+
+            registro.archivo_pdf =
+                blob.url;
+
+
+/*
+|--------------------------------------------------------------------------
+| ID DEL REGISTRO
+|--------------------------------------------------------------------------
+*/
+
+            registro.id =
+                crypto.randomUUID();
+
+
+/*
+|--------------------------------------------------------------------------
+| FECHA INTERNA DE CREACIÓN
+|--------------------------------------------------------------------------
+|
+| IMPORTANTE:
+|
+| createdAt solamente indica cuándo se cargó
+| el registro al sistema.
+|
+| NO modifica fecha_emision.
+|
+|--------------------------------------------------------------------------
+*/
+
+            registro.createdAt =
+                new Date();
+
+
+/*
+|--------------------------------------------------------------------------
+| CONECTAR MONGODB
+|--------------------------------------------------------------------------
+*/
+
+            const database =
+                await db();
+
+
+/*
+|--------------------------------------------------------------------------
+| REVISAR SI LA PLACA YA EXISTE
+|--------------------------------------------------------------------------
+*/
+
+            const existing =
+                await database
+                    .collection('lunas')
+                    .findOne({
+                        placa:
+                            registro.placa
+                    });
+
+
+/*
+|--------------------------------------------------------------------------
+| SI YA EXISTE, CONSERVAR ID Y FECHA INTERNA
+|--------------------------------------------------------------------------
+*/
+
+            if (existing) {
+
+                registro.id =
+                    existing.id ||
+                    registro.id;
+
+                registro.createdAt =
+                    existing.createdAt ||
+                    registro.createdAt;
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| GUARDAR / ACTUALIZAR
+|--------------------------------------------------------------------------
+*/
+
+            await database
+                .collection('lunas')
+                .replaceOne(
+
+                    {
+                        placa:
+                            registro.placa
+                    },
+
+                    registro,
+
+                    {
+                        upsert:
+                            true
+                    }
+                );
+
+
+/*
+|--------------------------------------------------------------------------
+| RESPUESTA
+|--------------------------------------------------------------------------
+*/
+
+            return res.json({
+
+                ok: true,
+
+                mensaje:
+                    'PDF importado correctamente',
+
+                placa:
+                    registro.placa,
+
+                propietario:
+                    registro.propietario,
+
+                certificado:
+                    registro.nro_certificado,
+
+                fecha_emision:
+                    registro.fecha_emision,
+
+                archivo_pdf:
+                    registro.archivo_pdf
+            });
+
+        } catch (e) {
+
+            console.error(
+                'ERROR IMPORTANDO PDF:',
+                e
+            );
+
+            return res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
+        }
     }
-}
-
-      /*
-       * La placa es obligatoria.
-       */
-
-      if (!registro.placa) {
-
-        return res.status(400).json({
-
-          ok: false,
-
-          mensaje:
-            'No se pudo extraer la placa del PDF.'
-        });
-      }
-
-      /*
-       * Nombre seguro para Vercel Blob.
-       */
-
-      const safeName =
-        `${registro.placa}-${Date.now()}.pdf`
-          .replace(
-            /[^A-Z0-9_.-]/gi,
-            '_'
-          );
-
-      /*
-       * SUBIR PDF A VERCEL BLOB
-       */
-
-      const blob =
-        await put(
-          `pdf/${safeName}`,
-
-          req.file.buffer,
-
-          {
-            access:
-              'public',
-
-            contentType:
-              'application/pdf',
-
-            addRandomSuffix:
-              false
-          }
-        );
-
-      /*
-       * Guardar URL permanente
-       * del PDF.
-       */
-
-      registro.archivo_pdf =
-        blob.url;
-
-      /*
-       * ID DEL REGISTRO
-       */
-
-      registro.id =
-        crypto.randomUUID();
-
-      /*
-       * FECHA DE CREACIÓN
-       */
-
-      registro.createdAt =
-        new Date();
-
-      /*
-       * CONECTAR MONGODB
-       */
-
-      const database =
-        await db();
-
-      /*
-       * Revisar si la placa
-       * ya existe.
-       */
-
-      const existing =
-        await database
-          .collection('lunas')
-          .findOne({
-            placa:
-              registro.placa
-          });
-
-      /*
-       * Si ya existe, conservar
-       * su ID y fecha original.
-       */
-
-      if (existing) {
-
-        registro.id =
-          existing.id ||
-          registro.id;
-
-        registro.createdAt =
-          existing.createdAt ||
-          registro.createdAt;
-      }
-
-      /*
-       * GUARDAR / ACTUALIZAR
-       */
-
-      await database
-        .collection('lunas')
-        .replaceOne(
-
-          {
-            placa:
-              registro.placa
-          },
-
-          registro,
-
-          {
-            upsert:
-              true
-          }
-        );
-
-      /*
-       * RESPUESTA
-       */
-
-      return res.json({
-
-        ok: true,
-
-        mensaje:
-          'PDF importado correctamente',
-
-        placa:
-          registro.placa,
-
-        propietario:
-          registro.propietario,
-
-        certificado:
-          registro.nro_certificado
-      });
-
-    } catch (e) {
-
-      console.error(
-        'ERROR IMPORTANDO PDF:',
-        e
-      );
-
-      return res.status(500).json({
-
-        ok: false,
-
-        mensaje:
-          e.message
-      });
-    }
-  }
 );
 
 
@@ -1395,143 +1497,167 @@ if (req.body.fecha_emision) {
 */
 
 app.put(
-  '/api/importar/lunas/:id',
-  auth,
+    '/api/importar/lunas/:id',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const fields = [
+            const fields = [
 
-        'placa',
+                'placa',
 
-        'propietario',
+                'propietario',
 
-        'nro_certificado',
+                'nro_certificado',
 
-        'categoria',
+                'categoria',
 
-        'marca',
+                'marca',
 
-        'modelo',
+                'modelo',
 
-        'color',
+                'color',
 
-        'motor',
+                'motor',
 
-        'serie',
+                'serie',
 
-        'anio',
+                'anio',
 
-        'fecha_emision'
-      ];
+                'fecha_emision'
+            ];
 
-      const update = {};
+            const update = {};
 
-      for (
-        const f of fields
-      ) {
+            for (
+                const f of fields
+            ) {
 
-        update[f] =
-          req.body?.[f] ?? '';
-      }
-
-      /*
-       * Normalizar placa antes
-       * de guardar manualmente.
-       */
-
-      if (update.placa) {
-
-        update.placa =
-          normalizarPlaca(
-            update.placa
-          );
-      }
-
-      /*
-       * Limpiar campos de texto.
-       */
-
-      for (
-        const f of [
-          'propietario',
-          'nro_certificado',
-          'categoria',
-          'marca',
-          'modelo',
-          'color',
-          'motor',
-          'serie',
-          'anio',
-          'fecha_emision'
-        ]
-      ) {
-
-        if (
-          typeof update[f] ===
-          'string'
-        ) {
-
-          update[f] =
-            limpiar(
-              update[f]
-            );
-        }
-      }
-
-      const result =
-        await database
-          .collection('lunas')
-          .updateOne(
-
-            {
-              id:
-                req.params.id
-            },
-
-            {
-              $set:
-                update
+                update[f] =
+                    req.body?.[f] ?? '';
             }
-          );
 
-      if (
-        !result.matchedCount
-      ) {
 
-        return res.status(404).json({
+/*
+|--------------------------------------------------------------------------
+| NORMALIZAR PLACA
+|--------------------------------------------------------------------------
+*/
 
-          ok: false,
+            if (update.placa) {
 
-          mensaje:
-            'Registro no encontrado'
-        });
-      }
+                update.placa =
+                    normalizarPlaca(
+                        update.placa
+                    );
+            }
 
-      res.json({
 
-        ok: true,
+/*
+|--------------------------------------------------------------------------
+| LIMPIAR CAMPOS DE TEXTO
+|--------------------------------------------------------------------------
+*/
 
-        mensaje:
-          'Registro actualizado correctamente'
-      });
+            for (
+                const f of [
 
-    } catch (e) {
+                    'propietario',
 
-      res.status(500).json({
+                    'nro_certificado',
 
-        ok: false,
+                    'categoria',
 
-        mensaje:
-          e.message
-      });
+                    'marca',
+
+                    'modelo',
+
+                    'color',
+
+                    'motor',
+
+                    'serie',
+
+                    'anio',
+
+                    'fecha_emision'
+
+                ]
+            ) {
+
+                if (
+                    typeof update[f] ===
+                    'string'
+                ) {
+
+                    update[f] =
+                        limpiar(
+                            update[f]
+                        );
+                }
+            }
+
+
+/*
+|--------------------------------------------------------------------------
+| ACTUALIZAR
+|--------------------------------------------------------------------------
+*/
+
+            const result =
+                await database
+                    .collection('lunas')
+                    .updateOne(
+
+                        {
+                            id:
+                                req.params.id
+                        },
+
+                        {
+                            $set:
+                                update
+                        }
+                    );
+
+
+            if (
+                !result.matchedCount
+            ) {
+
+                return res.status(404).json({
+
+                    ok: false,
+
+                    mensaje:
+                        'Registro no encontrado'
+                });
+            }
+
+            res.json({
+
+                ok: true,
+
+                mensaje:
+                    'Registro actualizado correctamente'
+            });
+
+        } catch (e) {
+
+            res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1542,57 +1668,58 @@ app.put(
 */
 
 app.delete(
-  '/api/importar/lunas/:id',
-  auth,
+    '/api/importar/lunas/:id',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const result =
-        await database
-          .collection('lunas')
-          .deleteOne({
+            const result =
+                await database
+                    .collection('lunas')
+                    .deleteOne({
 
-            id:
-              req.params.id
-          });
+                        id:
+                            req.params.id
+                    });
 
-      if (
-        !result.deletedCount
-      ) {
 
-        return res.status(404).json({
+            if (
+                !result.deletedCount
+            ) {
 
-          ok: false,
+                return res.status(404).json({
 
-          mensaje:
-            'Registro no encontrado'
-        });
-      }
+                    ok: false,
 
-      res.json({
+                    mensaje:
+                        'Registro no encontrado'
+                });
+            }
 
-        ok: true,
+            res.json({
 
-        mensaje:
-          'Registro eliminado correctamente'
-      });
+                ok: true,
 
-    } catch (e) {
+                mensaje:
+                    'Registro eliminado correctamente'
+            });
 
-      res.status(500).json({
+        } catch (e) {
 
-        ok: false,
+            res.status(500).json({
 
-        mensaje:
-          e.message
-      });
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 /*
 |--------------------------------------------------------------------------
@@ -1601,51 +1728,51 @@ app.delete(
 */
 
 app.get(
-  '/api/usuarios',
-  auth,
+    '/api/usuarios',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const usuarios =
-        await database
-          .collection('usuarios')
-          .find(
-            {},
-            {
-              projection: {
-                _id: 0,
-                password: 0
-              }
-            }
-          )
-          .sort({
-            createdAt: -1
-          })
-          .toArray();
+            const usuarios =
+                await database
+                    .collection('usuarios')
+                    .find(
+                        {},
+                        {
+                            projection: {
+                                _id: 0,
+                                password: 0
+                            }
+                        }
+                    )
+                    .sort({
+                        createdAt: -1
+                    })
+                    .toArray();
 
-      return res.json({
+            return res.json({
 
-        ok: true,
+                ok: true,
 
-        usuarios
-      });
+                usuarios
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-      return res.status(500).json({
+            return res.status(500).json({
 
-        ok: false,
+                ok: false,
 
-        mensaje:
-          e.message
-      });
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1656,89 +1783,89 @@ app.get(
 */
 
 app.post(
-  '/api/usuarios',
-  auth,
+    '/api/usuarios',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const {
-        usuario,
-        nombre,
-        password
-      } = req.body || {};
+            const {
+                usuario,
+                nombre,
+                password
+            } = req.body || {};
 
-      if (
-        !usuario ||
-        !password
-      ) {
+            if (
+                !usuario ||
+                !password
+            ) {
 
-        return res.status(400).json({
+                return res.status(400).json({
 
-          ok: false,
+                    ok: false,
 
-          mensaje:
-            'Usuario y contraseña son obligatorios'
-        });
-      }
+                    mensaje:
+                        'Usuario y contraseña son obligatorios'
+                });
+            }
 
-      await database
-        .collection('usuarios')
-        .insertOne({
+            await database
+                .collection('usuarios')
+                .insertOne({
 
-          id:
-            crypto.randomUUID(),
+                    id:
+                        crypto.randomUUID(),
 
-          usuario:
-            String(usuario).trim(),
+                    usuario:
+                        String(usuario).trim(),
 
-          nombre:
-            String(nombre || '').trim(),
+                    nombre:
+                        String(nombre || '').trim(),
 
-          correo:
-            '',
+                    correo:
+                        '',
 
-          rol:
-            'admin',
+                    rol:
+                        'admin',
 
-          estado:
-            1,
+                    estado:
+                        1,
 
-          password:
-            await bcrypt.hash(
-              password,
-              10
-            ),
+                    password:
+                        await bcrypt.hash(
+                            password,
+                            10
+                        ),
 
-          createdAt:
-            new Date()
-        });
+                    createdAt:
+                        new Date()
+                });
 
-      return res.json({
+            return res.json({
 
-        ok: true,
+                ok: true,
 
-        mensaje:
-          'Usuario creado correctamente'
-      });
+                mensaje:
+                    'Usuario creado correctamente'
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-      return res.status(500).json({
+            return res.status(500).json({
 
-        ok: false,
+                ok: false,
 
-        mensaje:
-          e.code === 11000
-            ? 'El usuario ya existe'
-            : e.message
-      });
+                mensaje:
+                    e.code === 11000
+                        ? 'El usuario ya existe'
+                        : e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1749,96 +1876,105 @@ app.post(
 */
 
 app.put(
-  '/api/usuarios/:id',
-  auth,
+    '/api/usuarios/:id',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      const {
-        usuario,
-        nombre,
-        password
-      } = req.body || {};
+            const {
+                usuario,
+                nombre,
+                password
+            } = req.body || {};
 
-      const update = {
+            const update = {
 
-        usuario:
-          String(usuario || '').trim(),
+                usuario:
+                    String(usuario || '').trim(),
 
-        nombre:
-          String(nombre || '').trim()
-      };
+                nombre:
+                    String(nombre || '').trim()
+            };
 
-      /*
-       * La contraseña solamente
-       * se cambia si se proporciona
-       * una nueva.
-       */
 
-      if (password) {
+/*
+|--------------------------------------------------------------------------
+| CAMBIAR CONTRASEÑA SI SE PROPORCIONA
+|--------------------------------------------------------------------------
+*/
 
-        update.password =
-          await bcrypt.hash(
-            password,
-            10
-          );
-      }
+            if (password) {
 
-      const result =
-        await database
-          .collection('usuarios')
-          .updateOne(
-
-            {
-              id:
-                req.params.id
-            },
-
-            {
-              $set:
-                update
+                update.password =
+                    await bcrypt.hash(
+                        password,
+                        10
+                    );
             }
-          );
 
-      if (
-        !result.matchedCount
-      ) {
 
-        return res.status(404).json({
+/*
+|--------------------------------------------------------------------------
+| ACTUALIZAR
+|--------------------------------------------------------------------------
+*/
 
-          ok: false,
+            const result =
+                await database
+                    .collection('usuarios')
+                    .updateOne(
 
-          mensaje:
-            'Usuario no encontrado'
-        });
-      }
+                        {
+                            id:
+                                req.params.id
+                        },
 
-      return res.json({
+                        {
+                            $set:
+                                update
+                        }
+                    );
 
-        ok: true,
 
-        mensaje:
-          'Usuario actualizado correctamente'
-      });
+            if (
+                !result.matchedCount
+            ) {
 
-    } catch (e) {
+                return res.status(404).json({
 
-      return res.status(500).json({
+                    ok: false,
 
-        ok: false,
+                    mensaje:
+                        'Usuario no encontrado'
+                });
+            }
 
-        mensaje:
-          e.code === 11000
-            ? 'El usuario ya existe'
-            : e.message
-      });
+            return res.json({
+
+                ok: true,
+
+                mensaje:
+                    'Usuario actualizado correctamente'
+            });
+
+        } catch (e) {
+
+            return res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.code === 11000
+                        ? 'El usuario ya existe'
+                        : e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1849,76 +1985,80 @@ app.put(
 */
 
 app.delete(
-  '/api/usuarios/:id',
-  auth,
+    '/api/usuarios/:id',
+    auth,
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      /*
-       * Evitar que el administrador
-       * elimine su propio usuario.
-       */
 
-      if (
-        req.params.id ===
-        req.usuario.id
-      ) {
+/*
+|--------------------------------------------------------------------------
+| EVITAR QUE EL ADMINISTRADOR SE ELIMINE A SÍ MISMO
+|--------------------------------------------------------------------------
+*/
 
-        return res.status(400).json({
+            if (
+                req.params.id ===
+                req.usuario.id
+            ) {
 
-          ok: false,
+                return res.status(400).json({
 
-          mensaje:
-            'No puede eliminar su propio usuario'
-        });
-      }
+                    ok: false,
 
-      const result =
-        await database
-          .collection('usuarios')
-          .deleteOne({
+                    mensaje:
+                        'No puede eliminar su propio usuario'
+                });
+            }
 
-            id:
-              req.params.id
-          });
 
-      if (
-        !result.deletedCount
-      ) {
+            const result =
+                await database
+                    .collection('usuarios')
+                    .deleteOne({
 
-        return res.status(404).json({
+                        id:
+                            req.params.id
+                    });
 
-          ok: false,
 
-          mensaje:
-            'Usuario no encontrado'
-        });
-      }
+            if (
+                !result.deletedCount
+            ) {
 
-      return res.json({
+                return res.status(404).json({
 
-        ok: true,
+                    ok: false,
 
-        mensaje:
-          'Usuario eliminado correctamente'
-      });
+                    mensaje:
+                        'Usuario no encontrado'
+                });
+            }
 
-    } catch (e) {
+            return res.json({
 
-      return res.status(500).json({
+                ok: true,
 
-        ok: false,
+                mensaje:
+                    'Usuario eliminado correctamente'
+            });
 
-        mensaje:
-          e.message
-      });
+        } catch (e) {
+
+            return res.status(500).json({
+
+                ok: false,
+
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1929,41 +2069,41 @@ app.delete(
 */
 
 app.get(
-  '/api/health',
+    '/api/health',
 
-  async (req, res) => {
+    async (req, res) => {
 
-    try {
+        try {
 
-      const database =
-        await db();
+            const database =
+                await db();
 
-      await database.command({
-        ping: 1
-      });
+            await database.command({
+                ping: 1
+            });
 
-      return res.json({
+            return res.json({
 
-        ok: true,
+                ok: true,
 
-        servicio:
-          'portal-lunas',
+                servicio:
+                    'portal-lunas',
 
-        baseDatos:
-          'MongoDB'
-      });
+                baseDatos:
+                    'MongoDB'
+            });
 
-    } catch (e) {
+        } catch (e) {
 
-      return res.status(500).json({
+            return res.status(500).json({
 
-        ok: false,
+                ok: false,
 
-        mensaje:
-          e.message
-      });
+                mensaje:
+                    e.message
+            });
+        }
     }
-  }
 );
 
 
@@ -1974,27 +2114,27 @@ app.get(
 */
 
 app.use(
-  (err, req, res, next) => {
+    (err, req, res, next) => {
 
-    console.error(
-      'ERROR DEL SERVIDOR:',
-      err
-    );
+        console.error(
+            'ERROR DEL SERVIDOR:',
+            err
+        );
 
-    if (
-      res.headersSent
-    ) {
-      return next(err);
+        if (
+            res.headersSent
+        ) {
+            return next(err);
+        }
+
+        return res.status(500).json({
+
+            ok: false,
+
+            mensaje:
+                'Error interno del servidor'
+        });
     }
-
-    return res.status(500).json({
-
-      ok: false,
-
-      mensaje:
-        'Error interno del servidor'
-    });
-  }
 );
 
 
@@ -2011,30 +2151,23 @@ module.exports = app;
 |--------------------------------------------------------------------------
 | SERVIDOR LOCAL
 |--------------------------------------------------------------------------
-|
-| Esto solamente se ejecuta cuando
-| ejecutamos server.js directamente.
-|
-| En Vercel se utiliza module.exports.
-|
-|--------------------------------------------------------------------------
 */
 
 if (
-  require.main === module
+    require.main === module
 ) {
 
-  const port =
-    process.env.PORT || 3000;
+    const port =
+        process.env.PORT || 3000;
 
-  app.listen(
-    port,
-    '0.0.0.0',
-    () => {
+    app.listen(
+        port,
+        '0.0.0.0',
+        () => {
 
-      console.log(
-        `Portal corriendo en puerto ${port}`
-      );
-    }
-  );
+            console.log(
+                `Portal corriendo en puerto ${port}`
+            );
+        }
+    );
 }
