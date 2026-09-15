@@ -167,6 +167,18 @@ Cerrar sesión
 
 <form id="formPDF">
 
+<label style="display:block;margin-bottom:8px;font-weight:bold;">
+FECHA DE EMISIÓN / REGISTRO
+</label>
+
+<input
+type="date"
+id="fechaPDF"
+required
+style="padding:10px;width:220px;margin-bottom:15px;">
+
+<br>
+
 <input
 type="file"
 id="archivoPDF"
@@ -272,10 +284,12 @@ document.getElementById("formPDF").addEventListener("submit",async(e)=>{
 
     e.preventDefault();
 
-    const archivo=document.getElementById("archivoPDF").files[0];
+    const archivo = document.getElementById("archivoPDF").files[0];
+const fechaPDF = document.getElementById("fechaPDF").value;
 
-    const datos=new FormData();
-    datos.append("archivo",archivo);
+const datos = new FormData();
+datos.append("archivo", archivo);
+datos.append("fecha_emision", fechaPDF);
 
     const r=await fetch("/api/importar/pdf",{
         method:"POST",
