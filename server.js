@@ -18,6 +18,10 @@ app.use(express.json({ limit: '2mb' }));
 
 const PUBLIC = __dirname;
 
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+app.use('/styles', express.static(path.join(__dirname, 'styles')));
+app.use('/services', express.static(path.join(__dirname, 'services')));
+
 // Vercel serves public/ automatically. These routes keep the original clean URLs.
 app.get('/', (req, res) => res.redirect('/consulta'));
 app.get('/consulta', (req, res) => res.sendFile(path.join(PUBLIC, 'consulta.html')));
