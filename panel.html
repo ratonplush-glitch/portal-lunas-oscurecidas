@@ -167,18 +167,6 @@ Cerrar sesión
 
 <form id="formPDF">
 
-<label style="display:block;margin-bottom:8px;font-weight:bold;">
-FECHA DE EMISIÓN / REGISTRO
-</label>
-
-<input
-type="date"
-id="fechaPDF"
-required
-style="padding:10px;width:220px;margin-bottom:15px;">
-
-<br>
-
 <input
 type="file"
 id="archivoPDF"
@@ -258,7 +246,6 @@ IMPORTAR PDF
 </div>
 
 </div>
-
 <script>
 
 const token = localStorage.getItem("token");
@@ -275,31 +262,73 @@ function authHeaders(extra = {}) {
 }
 
 function salir(){
+
     sessionStorage.clear();
+
     localStorage.removeItem("token");
+
     location.href="/index.html";
+
 }
 
 document.getElementById("formPDF").addEventListener("submit",async(e)=>{
 
     e.preventDefault();
 
-    const archivo = document.getElementById("archivoPDF").files[0];
-const fechaPDF = document.getElementById("fechaPDF").value;
+    const archivo =
+        document.getElementById("archivoPDF").files[0];
 
-const datos = new FormData();
-datos.append("archivo", archivo);
-datos.append("fecha_emision", fechaPDF);
+    if(!archivo){
 
-    const r=await fetch("/api/importar/pdf",{
-        method:"POST",
-        headers: authHeaders(),
-        body:datos
-    });
+        alert("Seleccione un archivo PDF.");
 
-    const j=await r.json();
+        return;
 
-    document.getElementById("resultado").innerHTML="<pre>"+JSON.stringify(j,null,2)+"</pre>";
+    }
+
+    const datos = new FormData();
+
+    datos.append("archivo", archivo);
+
+    try{
+
+        const r = await fetch("/api/importar/pdf",{
+
+            method:"POST",
+
+            headers: authHeaders(),
+
+            body:datos
+
+        });
+
+        if(r.status === 401 || r.status === 403){
+
+            localStorage.removeItem("token");
+
+            location.href="/index.html";
+
+            return;
+
+        }
+
+        const j = await r.json();
+
+        document.getElementById("resultado").innerHTML =
+            "<pre>"+JSON.stringify(j,null,2)+"</pre>";
+
+        if(j.ok){
+
+            document.getElementById("formPDF").reset();
+
+        }
+
+    }catch(error){
+
+        document.getElementById("resultado").innerHTML =
+            "<pre>Error: "+error.message+"</pre>";
+
+    }
 
 });
 
@@ -308,8 +337,20 @@ async function cargarUsuarios(){
     document.getElementById("panelUsuarios").style.display="block";
 
     const r=await fetch("/api/usuarios",{
+
         headers: authHeaders()
+
     });
+
+    if(r.status === 401 || r.status === 403){
+
+        localStorage.removeItem("token");
+
+        location.href="/index.html";
+
+        return;
+
+    }
 
     const datos=await r.json();
 
@@ -322,10 +363,15 @@ async function cargarUsuarios(){
 <tr>
 
 <td>${u.id}</td>
+
 <td>${u.usuario}</td>
+
 <td>${u.nombre}</td>
+
 <td>${u.correo??""}</td>
+
 <td>${u.rol??""}</td>
+
 <td>${u.estado??""}</td>
 
 <td>
@@ -359,9 +405,22 @@ async function eliminarUsuario(id){
     if(!confirm("¿Desea eliminar este usuario?")) return;
 
     const r=await fetch("/api/usuarios/"+id,{
+
         method:"DELETE",
+
         headers: authHeaders()
+
     });
+
+    if(r.status === 401 || r.status === 403){
+
+        localStorage.removeItem("token");
+
+        location.href="/index.html";
+
+        return;
+
+    }
 
     const j=await r.json();
 
@@ -390,16 +449,32 @@ async function editarUsuario(id){
         method:"PUT",
 
         headers: authHeaders({
+
             "Content-Type":"application/json"
+
         }),
 
         body:JSON.stringify({
+
             usuario,
+
             nombre,
+
             password
+
         })
 
     });
+
+    if(r.status === 401 || r.status === 403){
+
+        localStorage.removeItem("token");
+
+        location.href="/index.html";
+
+        return;
+
+    }
 
     const j=await r.json();
 
