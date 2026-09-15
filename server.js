@@ -688,263 +688,85 @@ async function parsePdf(buffer) {
 |--------------------------------------------------------------------------
 | FECHA DE EMISIÓN
 |--------------------------------------------------------------------------
+|
+| La fecha de emisión SIEMPRE se obtiene del contenido del PDF.
+|
+| Se admiten:
+|   1) Fecha de Emisión: 09/09/2026
+|   2) Fecha Emisión: 09-09-2026
+|   3) CALLAO, 08 de SETIEMBRE del 2026
+|   4) CALLAO, 08 de SEPTIEMBRE de 2026
+|
+| IMPORTANTE:
+| Nunca se utiliza new Date() como sustituto de fecha_emision.
+|--------------------------------------------------------------------------
 */
 
-    /*
-|--------------------------------------------------------------------------
-| FECHA DE EMISIÓN - EXTRACCIÓN ROBUSTA DESDE EL PDF
-|--------------------------------------------------------------------------
-*/
-
-let fecha_emision = '';
-
-
-// Texto normalizado para soportar saltos de línea,
-// espacios múltiples y caracteres de acentuación.
-
-const textoFechaNormalizado =
-    texto
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/\r/g, ' ')
-        .replace(/\n/g, ' ')
-        .replace(/\t/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
-
-
-// ---------------------------------------------------------------
-// MÉTODO 1
-// Fecha de Emisión: 09/09/2026
-// Fecha de Emision: 09/09/2026
-// Fecha Emisión: 09/09/2026
-// ---------------------------------------------------------------
-
-let encontrado =
-    textoFechaNormalizado.match(
-        /Fecha\s*(?:de\s*)?Emision\s*:?\s*(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/i
-    );
-
-if (encontrado) {
-
-    fecha_emision =
-        encontrado[1];
-
-}
-
-
-// ---------------------------------------------------------------
-// MÉTODO 2
-// Busca la etiqueta y cualquier fecha que aparezca
-// inmediatamente después de ella.
-// ---------------------------------------------------------------
-
-if (!fecha_emision) {
-
-    const posicion =
-        textoFechaNormalizado.search(
-            /Fecha\s*(?:de\s*)?Emision/i
-        );
-
-    if (posicion !== -1) {
-
-        const despues =
-            textoFechaNormalizado.substring(
-                posicion,
-                posicion + 250
-            );
-
-        const fecha =
-            despues.match(
-                /(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/
-            );
-
-        if (fecha) {
-
-            fecha_emision =
-                fecha[1];
-
-        }
-
-    }
-
-}
-
-
-// ---------------------------------------------------------------
-// MÉTODO 3
-// Algunos PDFs escriben EMISIÓN separado por espacios.
-// ---------------------------------------------------------------
-
-if (!fecha_emision) {
-
-    const posicion =
-        textoFechaNormalizado.search(
-            /F\s*e\s*c\s*h\s*a\s*(?:d\s*e\s*)?E\s*m\s*i\s*s\s*i\s*o\s*n/i
-        );
-
-    if (posicion !== -1) {
-
-        const despues =
-            textoFechaNormalizado.substring(
-                posicion,
-                posicion + 300
-            );
-
-        const fecha =
-            despues.match(
-                /(\d{1,2}[\/-]\d{1,2}[\/-]\d{4})/
-            );
-
-        if (fecha) {
-
-            fecha_emision =
-                fecha[1];
-
-        }
-
-    }
-
-}
-
-
-// ---------------------------------------------------------------
-// MÉTODO 4
-// Soporta fecha con espacios:
-// 09 / 09 / 2026
-// ---------------------------------------------------------------
-
-if (!fecha_emision) {
-
-    const posicion =
-        textoFechaNormalizado.search(
-            /Fecha\s*(?:de\s*)?Emision/i
-        );
-
-    if (posicion !== -1) {
-
-        const despues =
-            textoFechaNormalizado.substring(
-                posicion,
-                posicion + 300
-            );
-
-        const fecha =
-            despues.match(
-                /(\d{1,2})\s*[\/-]\s*(\d{1,2})\s*[\/-]\s*(\d{4})/
-            );
-
-        if (fecha) {
-
-            fecha_emision =
-                `${fecha[1]}/${fecha[2]}/${fecha[3]}`;
-
-        }
-
-    }
-
-}
-
-
-// ---------------------------------------------------------------
-// VALIDACIÓN
-// ---------------------------------------------------------------
-
-if (!fecha_emision) {
-
-    throw new Error(
-        'No se encontró la Fecha de Emisión en el PDF.'
-    );
-
-}
-
-
-// ---------------------------------------------------------------
-// NORMALIZAR
-// ---------------------------------------------------------------
-
-const partesFecha =
-    fecha_emision.match(
-        /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/
-    );
-
-if (partesFecha) {
-
-    const dia =
-        partesFecha[1].padStart(2, '0');
-
-    const mes =
-        partesFecha[2].padStart(2, '0');
-
-    const anio =
-        partesFecha[3];
-
-    fecha_emision =
-        `${dia}/${mes}/${anio}`;
-
-}
+    let fecha_emision = '';
 
     const textoFecha =
         texto
             .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, ' ');
-
-    const textoFechaLimpio =
-        textoFecha
-            .replace(
-                /[\r\n\t]+/g,
-                ' '
-            )
-            .replace(
-                /\s+/g,
-                ' '
-            )
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\u00a0/g, ' ')
+            .replace(/\r/g, ' ')
+            .replace(/\n/g, ' ')
+            .replace(/\t/g, ' ')
+            .replace(/\s+/g, ' ')
             .trim();
 
 
 /*
 |--------------------------------------------------------------------------
-| MÉTODO 1
+| MÉTODO 1 — FECHA NUMÉRICA
 |--------------------------------------------------------------------------
 */
 
-    let fechaEncontrada =
-        textoFechaLimpio.match(
-            /Fecha\s*(?:de\s*)?Emision\s*:?\s*([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/i
+    let fechaNumerica =
+        textoFecha.match(
+            /Fecha\s*(?:de\s*)?Emision\s*:?\s*(\d{1,2})\s*[\/-]\s*(\d{1,2})\s*[\/-]\s*(\d{4})/i
         );
 
-    if (fechaEncontrada) {
+    if (fechaNumerica) {
+
+        const dia =
+            fechaNumerica[1].padStart(2, '0');
+
+        const mes =
+            fechaNumerica[2].padStart(2, '0');
+
+        const anioFecha =
+            fechaNumerica[3];
 
         fecha_emision =
-            fechaEncontrada[1].trim();
-
+            `${dia}/${mes}/${anioFecha}`;
     }
 
 
 /*
 |--------------------------------------------------------------------------
-| MÉTODO 2
+| MÉTODO 2 — FECHA NUMÉRICA DESPUÉS DE LA ETIQUETA
 |--------------------------------------------------------------------------
 */
 
     if (!fecha_emision) {
 
         const bloqueFecha =
-            textoFechaLimpio.match(
-                /Fecha\s*(?:de\s*)?Emision[\s\S]{0,150}/i
+            textoFecha.match(
+                /Fecha\s+(?:de\s+)?Emision[\s\S]{0,250}/i
             );
 
         if (bloqueFecha) {
 
             const encontrada =
                 bloqueFecha[0].match(
-                    /([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/
+                    /(\d{1,2})\s*[\/-]\s*(\d{1,2})\s*[\/-]\s*(\d{4})/
                 );
 
             if (encontrada) {
 
                 fecha_emision =
-                    encontrada[1].trim();
+                    `${encontrada[1].padStart(2, '0')}/${encontrada[2].padStart(2, '0')}/${encontrada[3]}`;
 
             }
         }
@@ -953,28 +775,108 @@ if (partesFecha) {
 
 /*
 |--------------------------------------------------------------------------
-| MÉTODO 3
+| MÉTODO 3 — FECHA ESCRITA EN TEXTO
+|--------------------------------------------------------------------------
+|
+| Ejemplo:
+| CALLAO, 08 de SETIEMBRE del 2026
 |--------------------------------------------------------------------------
 */
 
     if (!fecha_emision) {
 
-        const bloqueFecha =
+        const fechaLarga =
             textoFecha.match(
-                /Fecha[\s\r\n]+(?:de[\s\r\n]+)?Emision[\s\S]{0,150}/i
+                /(?:CALLAO\s*,?\s*)?(\d{1,2})\s+de\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SETIEMBRE|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(?:del|de)\s+(\d{4})/i
             );
 
-        if (bloqueFecha) {
+        if (fechaLarga) {
 
-            const encontrada =
-                bloqueFecha[0].match(
-                    /([0-9]{1,2}[\/-][0-9]{1,2}[\/-][0-9]{4})/
-                );
+            const dia =
+                fechaLarga[1].padStart(2, '0');
 
-            if (encontrada) {
+            const mesTexto =
+                fechaLarga[2]
+                    .toUpperCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+            const anioFecha =
+                fechaLarga[3];
+
+            const meses = {
+                ENERO: '01',
+                FEBRERO: '02',
+                MARZO: '03',
+                ABRIL: '04',
+                MAYO: '05',
+                JUNIO: '06',
+                JULIO: '07',
+                AGOSTO: '08',
+                SETIEMBRE: '09',
+                SEPTIEMBRE: '09',
+                OCTUBRE: '10',
+                NOVIEMBRE: '11',
+                DICIEMBRE: '12'
+            };
+
+            const mes =
+                meses[mesTexto];
+
+            if (mes) {
 
                 fecha_emision =
-                    encontrada[1].trim();
+                    `${dia}/${mes}/${anioFecha}`;
+
+            }
+        }
+    }
+
+
+/*
+|--------------------------------------------------------------------------
+| MÉTODO 4 — FECHA ESCRITA SIN "CALLAO"
+|--------------------------------------------------------------------------
+*/
+
+    if (!fecha_emision) {
+
+        const fechaLarga =
+            textoFecha.match(
+                /(\d{1,2})\s+de\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SETIEMBRE|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(?:del|de)\s+(\d{4})/i
+            );
+
+        if (fechaLarga) {
+
+            const meses = {
+                ENERO: '01',
+                FEBRERO: '02',
+                MARZO: '03',
+                ABRIL: '04',
+                MAYO: '05',
+                JUNIO: '06',
+                JULIO: '07',
+                AGOSTO: '08',
+                SETIEMBRE: '09',
+                SEPTIEMBRE: '09',
+                OCTUBRE: '10',
+                NOVIEMBRE: '11',
+                DICIEMBRE: '12'
+            };
+
+            const mesTexto =
+                fechaLarga[2]
+                    .toUpperCase()
+                    .normalize('NFD')
+                    .replace(/[\u0300-\u036f]/g, '');
+
+            const mes =
+                meses[mesTexto];
+
+            if (mes) {
+
+                fecha_emision =
+                    `${fechaLarga[1].padStart(2, '0')}/${mes}/${fechaLarga[3]}`;
 
             }
         }
@@ -990,7 +892,7 @@ if (partesFecha) {
     if (!fecha_emision) {
 
         throw new Error(
-            'No se encontró la Fecha de Emisión en el PDF.'
+            'No se encontró la fecha de emisión en el PDF. La importación fue detenida para no inventar una fecha.'
         );
 
     }
@@ -998,37 +900,53 @@ if (partesFecha) {
 
 /*
 |--------------------------------------------------------------------------
-| NORMALIZAR FECHA
+| VALIDACIÓN DE FECHA
 |--------------------------------------------------------------------------
 */
 
-    const fechaMatch =
+    const fechaValida =
         fecha_emision.match(
-            /^(\d{1,2})[\/-](\d{1,2})[\/-](\d{4})$/
+            /^(\d{2})\/(\d{2})\/(\d{4})$/
         );
 
-    if (fechaMatch) {
+    if (!fechaValida) {
 
-        const dia =
-            fechaMatch[1].padStart(2, '0');
-
-        const mes =
-            fechaMatch[2].padStart(2, '0');
-
-        const anioFecha =
-            fechaMatch[3];
-
-        fecha_emision =
-            `${dia}/${mes}/${anioFecha}`;
+        throw new Error(
+            'La fecha de emisión encontrada en el PDF no tiene un formato válido.'
+        );
 
     }
 
+    const diaFecha =
+        Number(fechaValida[1]);
 
-/*
-|--------------------------------------------------------------------------
-| RESULTADO FINAL
-|--------------------------------------------------------------------------
-*/
+    const mesFecha =
+        Number(fechaValida[2]);
+
+    const anioFecha =
+        Number(fechaValida[3]);
+
+    const fechaReal =
+        new Date(
+            Date.UTC(
+                anioFecha,
+                mesFecha - 1,
+                diaFecha
+            )
+        );
+
+    if (
+        fechaReal.getUTCFullYear() !== anioFecha ||
+        fechaReal.getUTCMonth() !== mesFecha - 1 ||
+        fechaReal.getUTCDate() !== diaFecha
+    ) {
+
+        throw new Error(
+            'La fecha de emisión encontrada en el PDF no es una fecha válida.'
+        );
+
+    }
+
 
     return {
 
@@ -1067,8 +985,6 @@ if (partesFecha) {
             ''
     };
 }
-
-
 /*
 |--------------------------------------------------------------------------
 | LOGIN
@@ -1409,6 +1325,8 @@ app.post(
         }
     }
 );
+
+
 /*
 |--------------------------------------------------------------------------
 | IMPORTAR PDF
@@ -1435,7 +1353,6 @@ app.post(
                 });
             }
 
-
             const nombre =
                 String(
                     req.file.originalname || ''
@@ -1460,12 +1377,10 @@ app.post(
                 });
             }
 
-
             const registro =
                 await parsePdf(
                     req.file.buffer
                 );
-
 
             if (!registro.placa) {
 
@@ -1478,7 +1393,6 @@ app.post(
                 });
             }
 
-
             if (!registro.fecha_emision) {
 
                 return res.status(400).json({
@@ -1490,14 +1404,12 @@ app.post(
                 });
             }
 
-
             const safeName =
                 `${registro.placa}-${Date.now()}.pdf`
                     .replace(
                         /[^A-Z0-9_.-]/gi,
                         '_'
                     );
-
 
             const blob =
                 await put(
@@ -1517,10 +1429,8 @@ app.post(
                     }
                 );
 
-
             registro.archivo_pdf =
                 blob.url;
-
 
             registro.id =
                 crypto.randomUUID();
@@ -1538,10 +1448,8 @@ app.post(
             registro.createdAt =
                 new Date();
 
-
             const database =
                 await db();
-
 
             const existing =
                 await database
@@ -1550,7 +1458,6 @@ app.post(
                         placa:
                             registro.placa
                     });
-
 
             if (existing) {
 
@@ -1562,7 +1469,6 @@ app.post(
                     existing.createdAt ||
                     registro.createdAt;
             }
-
 
             await database
                 .collection('lunas')
@@ -1580,7 +1486,6 @@ app.post(
                             true
                     }
                 );
-
 
             return res.json({
 
@@ -1676,7 +1581,6 @@ app.put(
                     req.body?.[f] ?? '';
             }
 
-
             if (update.placa) {
 
                 update.placa =
@@ -1684,7 +1588,6 @@ app.put(
                         update.placa
                     );
             }
-
 
             for (
                 const f of [
@@ -1724,7 +1627,6 @@ app.put(
                 }
             }
 
-
             const result =
                 await database
                     .collection('lunas')
@@ -1741,7 +1643,6 @@ app.put(
                         }
                     );
 
-
             if (
                 !result.matchedCount
             ) {
@@ -1754,7 +1655,6 @@ app.put(
                         'Registro no encontrado'
                 });
             }
-
 
             res.json({
 
@@ -1804,7 +1704,6 @@ app.delete(
                             req.params.id
                     });
 
-
             if (
                 !result.deletedCount
             ) {
@@ -1817,7 +1716,6 @@ app.delete(
                         'Registro no encontrado'
                 });
             }
-
 
             res.json({
 
@@ -1839,8 +1737,6 @@ app.delete(
         }
     }
 );
-
-
 /*
 |--------------------------------------------------------------------------
 | USUARIOS
@@ -1874,7 +1770,6 @@ app.get(
                         createdAt: -1
                     })
                     .toArray();
-
 
             return res.json({
 
@@ -1920,7 +1815,6 @@ app.post(
                 password
             } = req.body || {};
 
-
             if (
                 !usuario ||
                 !password
@@ -1934,7 +1828,6 @@ app.post(
                         'Usuario y contraseña son obligatorios'
                 });
             }
-
 
             await database
                 .collection('usuarios')
@@ -1967,7 +1860,6 @@ app.post(
                     createdAt:
                         new Date()
                 });
-
 
             return res.json({
 
@@ -2016,7 +1908,6 @@ app.put(
                 password
             } = req.body || {};
 
-
             const update = {
 
                 usuario:
@@ -2026,7 +1917,6 @@ app.put(
                     String(nombre || '').trim()
             };
 
-
             if (password) {
 
                 update.password =
@@ -2035,7 +1925,6 @@ app.put(
                         10
                     );
             }
-
 
             const result =
                 await database
@@ -2053,7 +1942,6 @@ app.put(
                         }
                     );
 
-
             if (
                 !result.matchedCount
             ) {
@@ -2066,7 +1954,6 @@ app.put(
                         'Usuario no encontrado'
                 });
             }
-
 
             return res.json({
 
@@ -2109,7 +1996,6 @@ app.delete(
             const database =
                 await db();
 
-
             if (
                 req.params.id ===
                 req.usuario.id
@@ -2124,7 +2010,6 @@ app.delete(
                 });
             }
 
-
             const result =
                 await database
                     .collection('usuarios')
@@ -2133,7 +2018,6 @@ app.delete(
                         id:
                             req.params.id
                     });
-
 
             if (
                 !result.deletedCount
@@ -2147,7 +2031,6 @@ app.delete(
                         'Usuario no encontrado'
                 });
             }
-
 
             return res.json({
 
@@ -2169,6 +2052,8 @@ app.delete(
         }
     }
 );
+
+
 /*
 |--------------------------------------------------------------------------
 | HEALTH CHECK
@@ -2188,7 +2073,6 @@ app.get(
             await database.command({
                 ping: 1
             });
-
 
             return res.json({
 
@@ -2229,14 +2113,12 @@ app.use(
             err
         );
 
-
         if (
             res.headersSent
         ) {
 
             return next(err);
         }
-
 
         return res.status(500).json({
 
@@ -2270,7 +2152,6 @@ if (
 
     const port =
         process.env.PORT || 3000;
-
 
     app.listen(
         port,
