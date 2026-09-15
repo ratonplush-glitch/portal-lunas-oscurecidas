@@ -413,13 +413,7 @@ function extraerCampo(texto, campo) {
     'Fecha de Emisión',
     'Fecha Emisión',
     'Fecha de emision',
-    'Fecha emision',
-    'OBSERVACION',
-    'OBSERVACIÓN',
-    'RESPONSABLE',
-    'DATOS DEL SOLICITANTE',
-    'DATOS DEL VEHÍCULO',
-    'DATOS DEL VEHICULO'
+    'Fecha emision'
   ];
 
   const campoEscapado =
@@ -439,12 +433,16 @@ function extraerCampo(texto, campo) {
     new RegExp(
       campoEscapado +
       '\\s*:\\s*' +
-      '([^\\r\\n]*?)' +
+      '([\\s\\S]*?)' +
       '(?=' +
         '\\s+(?:' +
           siguientes +
         ')\\s*:' +
-      '|\\r?$)',
+        '|\\s+OBSERVACI[ÓO]N\\b' +
+        '|\\s+RESPONSABLE\\b' +
+        '|\\s+DATOS\\s+DEL\\s+VEH[IÍ]CULO\\b' +
+        '|\\s+DATOS\\s+DEL\\s+SOLICITANTE\\b' +
+        '|$)',
       'i'
     );
 
@@ -457,7 +455,8 @@ function extraerCampo(texto, campo) {
 
   return limpiar(
     m[1]
-      .replace(/[-_=]{3,}/g, '')
+      .replace(/[-_=]{2,}/g, ' ')
+      .replace(/\s+/g, ' ')
       .trim()
   );
 }
