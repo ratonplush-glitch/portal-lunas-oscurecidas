@@ -392,61 +392,33 @@ function escaparRegex(valor) {
 |--------------------------------------------------------------------------
 */
 
-function extraerCampo(
-  texto,
-  campo
-) {
+function extraerCampo(texto, campo) {
 
   const campos = [
-
     'Placa',
-
     'NRO',
-
     'Nro',
-
     'NRO Certificado',
-
     'Nro Certificado',
-
     'Categoría',
-
     'Categoria',
-
     'Carrocería',
-
     'Carroceria',
-
     'Marca',
-
     'Modelo',
-
     'Color',
-
     'Motor',
-
     'Serie',
-
     'Año',
-
     'Fecha de Emisión',
-
     'Fecha Emisión',
-
     'Fecha de emision',
-
     'Fecha emision',
-
     'OBSERVACION',
-
     'OBSERVACIÓN',
-
     'RESPONSABLE',
-
     'DATOS DEL SOLICITANTE',
-
     'DATOS DEL VEHÍCULO',
-
     'DATOS DEL VEHICULO'
   ];
 
@@ -463,28 +435,16 @@ function extraerCampo(
       .map(escaparRegex)
       .join('|');
 
-  /*
-   * El dato se detiene:
-   *
-   * 1. Cuando aparece otro campo.
-   * 2. Cuando aparece OBSERVACION.
-   * 3. Cuando aparece RESPONSABLE.
-   * 4. Cuando termina el texto.
-   *
-   * Puede haber espacios o saltos
-   * de línea entre etiquetas.
-   */
-
   const regex =
     new RegExp(
       campoEscapado +
       '\\s*:\\s*' +
-      '([\\s\\S]*?)' +
+      '([^\\r\\n]*?)' +
       '(?=' +
         '\\s+(?:' +
           siguientes +
         ')\\s*:' +
-      '|$)',
+      '|\\r?$)',
       'i'
     );
 
@@ -497,6 +457,8 @@ function extraerCampo(
 
   return limpiar(
     m[1]
+      .replace(/[-_=]{3,}/g, '')
+      .trim()
   );
 }
 
