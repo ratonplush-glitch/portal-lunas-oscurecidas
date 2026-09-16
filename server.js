@@ -60,7 +60,7 @@ app.use(
 */
 
 app.get('/', (req, res) => {
-    res.redirect('/consulta');
+    res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 app.get('/index.html', (req, res) => {
