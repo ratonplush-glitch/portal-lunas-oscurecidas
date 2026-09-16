@@ -241,9 +241,7 @@ function tokenFor(user) {
             usuario: user.usuario
         },
 
-        process.env.JWT_SECRET ||
-        'PORTAL_LUNAS_2026',
-
+       process.env.JWT_SECRET
         {
             expiresIn: '8h'
         }
@@ -279,8 +277,7 @@ function auth(req, res, next) {
 
         req.usuario = jwt.verify(
             token,
-            process.env.JWT_SECRET ||
-            'PORTAL_LUNAS_2026'
+            process.env.JWT_SECRET
         );
 
         next();
