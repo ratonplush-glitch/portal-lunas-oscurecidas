@@ -60,10 +60,10 @@ app.use(
 */
 
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'index.html'));
+    res.redirect('/consulta');
 });
 
-app.get('/index.html', (req, res) => {
+app.get('/login', (req, res) => {
     res.sendFile(
         path.join(__dirname, 'index.html')
     );
