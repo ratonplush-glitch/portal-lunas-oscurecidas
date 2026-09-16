@@ -240,12 +240,12 @@ function tokenFor(user) {
             id: user.id,
             usuario: user.usuario
         },
-
-       process.env.JWT_SECRET
+        process.env.JWT_SECRET,
         {
             expiresIn: '8h'
         }
     );
+
 }
 
 
