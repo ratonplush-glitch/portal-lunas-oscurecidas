@@ -12,9 +12,13 @@ btn.addEventListener("click", async () => {
 
         mensaje.style.color = "red";
         mensaje.innerHTML = "Complete todos los campos";
-        return;
 
+        return;
     }
+
+    // Desactivar botón mientras inicia sesión
+    btn.disabled = true;
+    btn.innerHTML = "INGRESANDO...";
 
     try {
 
@@ -27,48 +31,127 @@ btn.addEventListener("click", async () => {
             },
 
             body: JSON.stringify({
-                usuario,
-                password
-            })
+                usuario: usuario,
+                password: password
+            }),
+
+            cache: "no-store"
 
         });
 
-        const datos = await respuesta.json();
+        let datos;
 
-        if (datos.ok) {
+        try {
 
-            // ==========================
-            // GUARDAR TOKEN JWT
-            // ==========================
+            datos = await respuesta.json();
 
-            localStorage.setItem("token", datos.token);
+        } catch (error) {
 
-            sessionStorage.setItem("admin", "ok");
-            sessionStorage.setItem("usuario", datos.usuario.usuario);
-            sessionStorage.setItem("nombre", datos.usuario.nombre);
-
-            mensaje.style.color = "green";
-            mensaje.innerHTML = "Bienvenido " + datos.usuario.nombre;
-
-            setTimeout(() => {
-
-                window.location.href = "/panel";
-
-            }, 1000);
-
-        } else {
+            console.error("Respuesta inválida del servidor:", error);
 
             mensaje.style.color = "red";
-            mensaje.innerHTML = datos.mensaje;
+            mensaje.innerHTML = "Respuesta inválida del servidor";
 
+            btn.disabled = false;
+            btn.innerHTML = "INGRESAR";
+
+            return;
         }
+
+
+        // ==========================================
+        // LOGIN CORRECTO
+        // ==========================================
+
+        if (respuesta.ok && datos.ok && datos.token) {
+
+            // Limpiar tokens anteriores
+            localStorage.removeItem("token");
+            sessionStorage.removeItem("token");
+
+            // Guardar el nuevo JWT
+            localStorage.setItem("token", datos.token);
+            sessionStorage.setItem("token", datos.token);
+
+
+            // Guardar información del usuario
+            if (datos.usuario) {
+
+                if (datos.usuario.usuario) {
+
+                    sessionStorage.setItem(
+                        "usuario",
+                        datos.usuario.usuario
+                    );
+
+                }
+
+                if (datos.usuario.nombre) {
+
+                    sessionStorage.setItem(
+                        "nombre",
+                        datos.usuario.nombre
+                    );
+
+                }
+
+            }
+
+
+            // Marcar sesión administrativa
+            sessionStorage.setItem("admin", "ok");
+
+
+            mensaje.style.color = "green";
+
+            mensaje.innerHTML =
+                "Bienvenido " +
+                (
+                    datos.usuario && datos.usuario.nombre
+                    ? datos.usuario.nombre
+                    : usuario
+                );
+
+
+            // Esperar un momento y entrar al panel
+            setTimeout(() => {
+
+                window.location.replace("/panel");
+
+            }, 500);
+
+
+            return;
+        }
+
+
+        // ==========================================
+        // LOGIN INCORRECTO
+        // ==========================================
+
+        mensaje.style.color = "red";
+
+        mensaje.innerHTML =
+            datos.mensaje ||
+            "Usuario o contraseña incorrectos";
+
+
+        btn.disabled = false;
+        btn.innerHTML = "INGRESAR";
+
 
     } catch (error) {
 
-        console.error(error);
+        console.error("ERROR LOGIN:", error);
 
         mensaje.style.color = "red";
-        mensaje.innerHTML = "No se pudo conectar con el servidor";
+
+        mensaje.innerHTML =
+            "No se pudo conectar con el servidor";
+
+
+        btn.disabled = false;
+        btn.innerHTML = "INGRESAR";
 
     }
 
