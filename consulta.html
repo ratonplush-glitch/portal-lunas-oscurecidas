@@ -503,28 +503,137 @@ async function consultar(){
             registro.anio || "";
 
 
-        if(registro.fecha_emision){
+        // ============================================================
+// FECHA DE EMISIÓN
+// SIEMPRE RESPETA LA FECHA EXTRAÍDA DEL PDF
+// NO USA new Date() PARA INTERPRETAR DD/MM/YYYY
+// NO INVENTA FECHAS
+// ============================================================
 
-            const fecha = new Date(registro.fecha_emision);
+function formatearFechaEmision(valor) {
 
-            const dia =
-                String(fecha.getDate()).padStart(2, "0");
+    if (!valor) {
+        return "";
+    }
 
-            const mes =
-                String(fecha.getMonth() + 1).padStart(2, "0");
+    const texto = String(valor).trim();
 
-            const anio =
-                fecha.getFullYear();
+    // --------------------------------------------------------
+    // 1. FORMATO DD/MM/YYYY
+    // Ejemplo: 14/09/2026
+    // --------------------------------------------------------
+
+    let m = texto.match(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+    );
+
+    if (m) {
+
+        const dia = m[1].padStart(2, "0");
+        const mes = m[2].padStart(2, "0");
+        const anio = m[3];
+
+        return `${dia}/${mes}/${anio}`;
+    }
 
 
-            document.getElementById("rFecha").textContent =
-                `${dia}/${mes}/${anio}`;
+    // --------------------------------------------------------
+    // 2. FORMATO DD-MM-YYYY
+    // Ejemplo: 14-09-2026
+    // --------------------------------------------------------
 
-        }else{
+    m = texto.match(
+        /^(\d{1,2})-(\d{1,2})-(\d{4})$/
+    );
 
-            document.getElementById("rFecha").textContent = "";
+    if (m) {
 
+        const dia = m[1].padStart(2, "0");
+        const mes = m[2].padStart(2, "0");
+        const anio = m[3];
+
+        return `${dia}/${mes}/${anio}`;
+    }
+
+
+    // --------------------------------------------------------
+    // 3. FECHA ISO
+    // Ejemplo:
+    // 2026-09-14
+    // 2026-09-14T00:00:00.000Z
+    //
+    // NO usamos new Date().
+    // Tomamos directamente año, mes y día.
+    // --------------------------------------------------------
+
+    m = texto.match(
+        /^(\d{4})-(\d{2})-(\d{2})(?:T.*)?$/
+    );
+
+    if (m) {
+
+        const anio = m[1];
+        const mes = m[2];
+        const dia = m[3];
+
+        return `${dia}/${mes}/${anio}`;
+    }
+
+
+    // --------------------------------------------------------
+    // 4. FECHA ESCRITA EN ESPAÑOL
+    //
+    // Ejemplos:
+    // 14 de SETIEMBRE del 2026
+    // 08 de SEPTIEMBRE de 2026
+    // 1 de ENERO del 2026
+    // --------------------------------------------------------
+
+    m = texto.match(
+        /(\d{1,2})\s+de\s+(ENERO|FEBRERO|MARZO|ABRIL|MAYO|JUNIO|JULIO|AGOSTO|SETIEMBRE|SEPTIEMBRE|OCTUBRE|NOVIEMBRE|DICIEMBRE)\s+(?:del|de)\s+(\d{4})/i
+    );
+
+    if (m) {
+
+        const meses = {
+            ENERO: "01",
+            FEBRERO: "02",
+            MARZO: "03",
+            ABRIL: "04",
+            MAYO: "05",
+            JUNIO: "06",
+            JULIO: "07",
+            AGOSTO: "08",
+            SETIEMBRE: "09",
+            SEPTIEMBRE: "09",
+            OCTUBRE: "10",
+            NOVIEMBRE: "11",
+            DICIEMBRE: "12"
+        };
+
+        const dia = m[1].padStart(2, "0");
+        const mes = meses[m[2].toUpperCase()];
+        const anio = m[3];
+
+        if (mes) {
+            return `${dia}/${mes}/${anio}`;
         }
+    }
+
+
+    // --------------------------------------------------------
+    // 5. SI EL SERVIDOR ENVÍA OTRO FORMATO
+    //
+    // NO INVENTAMOS UNA FECHA.
+    // Mostramos el valor recibido.
+    // --------------------------------------------------------
+
+    return texto;
+}
+
+
+document.getElementById("rFecha").textContent =
+    formatearFechaEmision(registro.fecha_emision);
 
 
         document.getElementById("rPropietario").textContent =
