@@ -299,6 +299,32 @@ function auth(req, res, next) {
 */
 
 async function ensureAdmin() {
+    const user = process.env.ADMIN_USER;
+    const password = process.env.ADMIN_PASSWORD;
+
+    if (!user || !password) return;
+
+    const database = await db();
+
+    const exists = await database
+        .collection('usuarios')
+        .findOne({
+            usuario: user
+        });
+
+    if (!exists) {
+        await database.collection('usuarios').insertOne({
+            id: crypto.randomUUID(),
+            usuario: user,
+            nombre: process.env.ADMIN_NAME || 'Administrador',
+            correo: process.env.ADMIN_EMAIL || '',
+            rol: 'admin',
+            estado: 1,
+            password: await bcrypt.hash(password, 10),
+            createdAt: new Date()
+        });
+    }
+}
 
     const user =
         process.env.ADMIN_USER;
