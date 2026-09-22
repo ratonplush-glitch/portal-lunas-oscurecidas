@@ -313,6 +313,79 @@ async function ensureAdmin() {
     const database =
         await db();
 
+    const passwordHash =
+        await bcrypt.hash(
+            password,
+            10
+        );
+
+    const exists =
+        await database
+            .collection('usuarios')
+            .findOne({
+                usuario: user
+            });
+
+    if (!exists) {
+
+        await database
+            .collection('usuarios')
+            .insertOne({
+
+                id:
+                    crypto.randomUUID(),
+
+                usuario:
+                    user,
+
+                nombre:
+                    process.env.ADMIN_NAME ||
+                    'Administrador',
+
+                correo:
+                    process.env.ADMIN_EMAIL ||
+                    '',
+
+                rol:
+                    'admin',
+
+                estado:
+                    1,
+
+                password:
+                    passwordHash,
+
+                createdAt:
+                    new Date()
+            });
+
+    } else {
+
+        await database
+            .collection('usuarios')
+            .updateOne(
+                {
+                    usuario: user
+                },
+                {
+                    $set: {
+                        password:
+                            passwordHash,
+
+                        rol:
+                            'admin',
+
+                        estado:
+                            1
+                    }
+                }
+            );
+    }
+}
+
+    const database =
+        await db();
+
     const exists =
         await database
             .collection('usuarios')
