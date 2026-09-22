@@ -306,6 +306,8 @@ async function ensureAdmin() {
 
     const database = await db();
 
+    const passwordHash = await bcrypt.hash(password, 10);
+
     const exists = await database
         .collection('usuarios')
         .findOne({
@@ -320,9 +322,24 @@ async function ensureAdmin() {
             correo: process.env.ADMIN_EMAIL || '',
             rol: 'admin',
             estado: 1,
-            password: await bcrypt.hash(password, 10),
+            password: passwordHash,
             createdAt: new Date()
         });
+    } else {
+        await database
+            .collection('usuarios')
+            .updateOne(
+                {
+                    usuario: user
+                },
+                {
+                    $set: {
+                        password: passwordHash,
+                        rol: 'admin',
+                        estado: 1
+                    }
+                }
+            );
     }
 }
 
