@@ -272,23 +272,36 @@ function auth(req, res, next) {
             ok: false,
             mensaje: 'Token no proporcionado'
         });
+
     }
 
     try {
 
-        req.usuario = jwt.verify(
+        const usuario = jwt.verify(
             token,
             process.env.JWT_SECRET
         );
 
+        if (usuario.rol !== 'admin') {
+
+            return res.status(403).json({
+                ok: false,
+                mensaje: 'Acceso de administrador requerido'
+            });
+
+        }
+
+        req.usuario = usuario;
+
         next();
 
-    } catch {
+    } catch (error) {
 
-        return res.status(403).json({
+        return res.status(401).json({
             ok: false,
             mensaje: 'Token inválido'
         });
+
     }
 }
 
