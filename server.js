@@ -358,8 +358,6 @@ async function ensureAdmin() {
         });
 
     if (!exists) {
-        const passwordHash = await bcrypt.hash(password, 10);
-
         await database.collection('usuarios').insertOne({
             id: crypto.randomUUID(),
             usuario: user,
@@ -367,7 +365,7 @@ async function ensureAdmin() {
             correo: process.env.ADMIN_EMAIL || '',
             rol: 'admin',
             estado: 1,
-            password: passwordHash,
+            password: await bcrypt.hash(password, 10),
             createdAt: new Date()
         });
     }
