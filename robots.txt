@@ -1,7 +1,10 @@
 User-agent: *
 Allow: /
+
 Disallow: /panel
+Disallow: /login
 Disallow: /lunas
+Disallow: /api/
 Disallow: /index.html
 
-Sitemap: https://consultalunas.com/sitemap.xml
+Sitemap: https://www.consultalunas.com/sitemap.xml
