@@ -306,8 +306,6 @@ async function ensureAdmin() {
 
     const database = await db();
 
-    const passwordHash = await bcrypt.hash(password, 10);
-
     const exists = await database
         .collection('usuarios')
         .findOne({
@@ -315,6 +313,8 @@ async function ensureAdmin() {
         });
 
     if (!exists) {
+        const passwordHash = await bcrypt.hash(password, 10);
+
         await database.collection('usuarios').insertOne({
             id: crypto.randomUUID(),
             usuario: user,
@@ -325,21 +325,6 @@ async function ensureAdmin() {
             password: passwordHash,
             createdAt: new Date()
         });
-    } else {
-        await database
-            .collection('usuarios')
-            .updateOne(
-                {
-                    usuario: user
-                },
-                {
-                    $set: {
-                        password: passwordHash,
-                        rol: 'admin',
-                        estado: 1
-                    }
-                }
-            );
     }
 }
 
