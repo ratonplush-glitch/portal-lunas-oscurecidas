@@ -238,7 +238,8 @@ function tokenFor(user) {
     return jwt.sign(
         {
             id: user.id,
-            usuario: user.usuario
+            usuario: user.usuario,
+            rol: user.rol
         },
         process.env.JWT_SECRET,
         {
