@@ -1008,6 +1008,7 @@ async function parsePdf(buffer) {
 
 app.post(
     '/api/login',
+    loginLimiter,
     async (req, res) => {
 
         try {
