@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const rateLimit = require('express-rate-limit');
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -15,6 +16,17 @@ require('dotenv').config();
 const app = express();
 
 app.set('trust proxy', 1);
+
+const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 10,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        ok: false,
+        mensaje: "Demasiados intentos de inicio de sesión. Inténtalo nuevamente más tarde."
+    }
+});
 
 app.use(cors({
     origin: [
