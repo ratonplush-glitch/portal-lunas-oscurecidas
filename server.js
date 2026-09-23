@@ -16,7 +16,14 @@ const app = express();
 
 app.set('trust proxy', 1);
 
-app.use(cors());
+app.use(cors({
+    origin: [
+        "https://consultalunas.com",
+        "https://www.consultalunas.com"
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
+}));
 
 app.use(express.json({
     limit: '2mb'
