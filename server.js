@@ -1393,6 +1393,17 @@ app.post(
                 });
             }
 
+            const primerosBytes = req.file.buffer
+    .subarray(0, 5)
+    .toString('ascii');
+
+if (primerosBytes !== '%PDF-') {
+    return res.status(400).json({
+        ok: false,
+        mensaje: 'El archivo no es un PDF válido'
+    });
+}
+
             const nombre =
                 String(
                     req.file.originalname || ''
